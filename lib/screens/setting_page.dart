@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import '../constants/app_colors.dart';
 import '../screens/main_screen.dart';
-import '../widgets/background_wrapper.dart'; // อย่าลืมตรวจสอบ Path นี้นะครับ
+import '../widgets/background_wrapper.dart'; 
+import '../screens/personal_info_screen.dart'; 
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -19,10 +20,9 @@ class _SettingPageState extends State<SettingPage> {
 
   @override
   Widget build(BuildContext context) {
-    // --- แก้ไข: เปลี่ยน Scaffold Body ให้เป็น BackgroundWrapper ---
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
-      body: BackgroundWrapper( // ใช้ตัว Wrapper ครอบเพื่อให้มี Background Orbs เหมือนหน้าอื่นๆ
+      body: BackgroundWrapper( 
         child: SafeArea(
           child: Column(
             children: [
@@ -35,7 +35,21 @@ class _SettingPageState extends State<SettingPage> {
                   children: [
                     // --- Section: Profile ---
                     _buildSectionTitle("Profile"),
-                    _buildSettingItem(iconPath: 'assets/icons/profile_icon.png', title: "Edit Personal Information", onTap: () {}),
+                    
+                    // ---> แก้ไข: ใส่ Navigator.push ใน onTap ตรงนี้ <---
+                    _buildSettingItem(
+                      iconPath: 'assets/icons/profile_icon.png', 
+                      title: "Edit Personal Information", 
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const PersonalInfoScreen(),
+                          ),
+                        );
+                      }
+                    ),
+                    
                     _buildSettingItem(iconPath: 'assets/icons/goal_icon.png', title: "Goals", onTap: () {}),
                     const SizedBox(height: 25),
 
