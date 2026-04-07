@@ -40,7 +40,7 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
   int? _expandedIndex;
   int? _pressedIndex;
   late int _currentPoints; 
-  bool _isLoading = true; // ✅ เพิ่มสถานะโหลดข้อมูล
+  bool _isLoading = true;
 
   final List<RewardItem> _rewards = const [
     RewardItem(
@@ -75,21 +75,14 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
   void initState() {
     super.initState();
     _currentPoints = widget.userPoints;
-    _fetchUserPoints(); // ✅ ดึงคะแนนจริงจาก DB ทันทีที่เข้าหน้านี้
+    _fetchUserPoints();
   }
 
-  // ✅ ฟังก์ชันดึงคะแนนล่าสุดจาก Database
   Future<void> _fetchUserPoints() async {
     try {
       final user = supabase.auth.currentUser;
       if (user == null) return;
-
-      final data = await supabase
-          .from('users')
-          .select('points')
-          .eq('user_id', user.id)
-          .single();
-
+      final data = await supabase.from('users').select('points').eq('user_id', user.id).single();
       if (mounted) {
         setState(() {
           _currentPoints = data['points'] ?? 0;
@@ -97,29 +90,59 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
         });
       }
     } catch (e) {
-      debugPrint("Error fetching points: $e");
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  // ✅ ฟังก์ชันเช็คสิทธิ์ (ห้ามแลกซ้ำภายใน 60 วัน)
+  Future<bool> _checkRedeemEligibility(String rewardTitle) async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return false;
+
+    final lastRedeemed = await supabase
+        .from('reward_history')
+        .select('redeemed_at')
+        .eq('user_id', user.id)
+        .eq('reward_title', rewardTitle)
+        .order('redeemed_at', ascending: false)
+        .maybeSingle();
+
+    if (lastRedeemed == null) return true;
+
+    DateTime lastDate = DateTime.parse(lastRedeemed['redeemed_at']);
+    return DateTime.now().difference(lastDate).inDays >= 60;
+  }
+
+  void _navigateToIndex(int index) {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => MainScreen(initialIndex: index)),
+      (route) => false,
+    );
   }
 
   void _onCardTap(int index) {
     setState(() => _expandedIndex = (_expandedIndex == index) ? null : index);
   }
 
-  void _backToMain() {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => const MainScreen()),
-      (route) => false,
-    );
-  }
-
   Future<void> _onPurchase(RewardItem reward) async {
+    // 1. เช็คแต้มเบื้องต้น
     if (_currentPoints < reward.points) {
-      _showErrorDialog(reward);
+      _showErrorDialog(reward, "Not enough points", "You only have $_currentPoints pts.");
       return;
     }
 
+    // 2. เช็คเงื่อนไข 2 เดือน
+    setState(() => _isLoading = true);
+    bool canRedeem = await _checkRedeemEligibility(reward.title);
+    setState(() => _isLoading = false);
+
+    if (!canRedeem) {
+      _showErrorDialog(reward, "Limit Reached", "You can only redeem this every 2 months.");
+      return;
+    }
+
+    // 3. ยืนยันการแลก
     final bool? confirm = await _showConfirmDialog(reward);
     
     if (confirm == true) {
@@ -127,47 +150,47 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
         final user = supabase.auth.currentUser;
         if (user == null) return;
 
-        // 1. คำนวณคะแนนใหม่
         int newPoints = _currentPoints - reward.points;
 
-        // 2. อัปเดตลง Supabase
-        await supabase
-            .from('users')
-            .update({'points': newPoints})
-            .eq('user_id', user.id);
+        // บันทึกการหักแต้ม + ถ้าเป็น SPECIAL TITLES ให้เซฟยศด้วย
+        Map<String, dynamic> userUpdates = {'points': newPoints};
+        if (reward.title == 'SPECIAL TITLES') {
+          userUpdates['special_title'] = 'Legendary Healthy';
+        }
 
-        // 3. อัปเดต UI ในแอป
-        setState(() {
-          _currentPoints = newPoints;
+        await supabase.from('users').update(userUpdates).eq('user_id', user.id);
+
+        // บันทึกประวัติการแลกลงตาราง reward_history
+        await supabase.from('reward_history').insert({
+          'user_id': user.id,
+          'reward_title': reward.title,
         });
+
+        setState(() => _currentPoints = newPoints);
 
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('"${reward.title}" redeemed successfully!', 
-              style: const TextStyle(fontFamily: 'Poppins-Medium', color: Colors.white)),
+            content: Text('"${reward.title}" redeemed successfully!', style: const TextStyle(fontFamily: 'Poppins-Medium', color: Colors.white)),
             backgroundColor: reward.titleColor,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
         );
       } catch (e) {
-        debugPrint("Error redeeming: $e");
+        debugPrint("Error: $e");
       }
     }
   }
 
-  void _showErrorDialog(RewardItem reward) {
+  void _showErrorDialog(RewardItem reward, String title, String content) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Not enough points', 
-          style: TextStyle(fontFamily: 'Poppins-Medium', fontWeight: FontWeight.bold)),
-        content: Text(
-          'You need ${reward.points} pts to redeem "${reward.title}".\nYou only have $_currentPoints pts.', 
-          style: const TextStyle(fontFamily: 'Poppins')),
+        title: Text(title, style: const TextStyle(fontFamily: 'Poppins-Medium', fontWeight: FontWeight.bold)),
+        content: Text(content, style: const TextStyle(fontFamily: 'Poppins')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -184,22 +207,14 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
       builder: (_) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Redeem "${reward.title}"?', 
-          style: const TextStyle(fontFamily: 'Poppins-Medium', fontWeight: FontWeight.bold)),
-        content: Text('This will use ${reward.points} pts from your balance.', 
-          style: const TextStyle(fontFamily: 'Poppins')),
+        title: Text('Redeem "${reward.title}"?', style: const TextStyle(fontFamily: 'Poppins-Medium', fontWeight: FontWeight.bold)),
+        content: Text('This will use ${reward.points} pts from your balance.', style: const TextStyle(fontFamily: 'Poppins')),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontFamily: 'Poppins')),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: reward.titleColor, 
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: reward.titleColor, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Confirm', style: TextStyle(fontFamily: 'Poppins-Medium', fontWeight: FontWeight.bold, color: Colors.white)),
+            child: const Text('Confirm', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -214,7 +229,7 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
       body: SafeArea(
         bottom: false,
         child: _isLoading 
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF2D7D9A))) // ✅ โชว์โหลดข้อมูล
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF2D7D9A)))
           : SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
@@ -261,11 +276,7 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
               ),
             ),
           ),
-          const Expanded(
-            child: Center(
-              child: Text("Rewards", style: TextStyle(fontSize: 20, fontFamily: 'Poppins-Medium', color: AppColors.greyText)),
-            ),
-          ),
+          const Expanded(child: Center(child: Text("Rewards", style: TextStyle(fontSize: 20, fontFamily: 'Poppins-Medium', color: AppColors.greyText)))),
           const SizedBox(width: 60), 
         ],
       ),
@@ -334,11 +345,7 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: Container(
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Colors.white.withOpacity(0.4), Colors.white.withOpacity(0.1)],
-                  ),
+                  gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Colors.white.withOpacity(0.4), Colors.white.withOpacity(0.1)]),
                   border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.0),
                 ),
                 child: Padding(
@@ -356,14 +363,9 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
                         ],
                         const SizedBox(height: 25),
                         SizedBox(
-                          width: double.infinity,
-                          height: 50,
+                          width: double.infinity, height: 50,
                           child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: reward.titleColor,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
+                            style: ElevatedButton.styleFrom(backgroundColor: reward.titleColor, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                             onPressed: () => _onPurchase(reward),
                             child: const Text('Redeem Now', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Poppins-Medium')),
                           ),
@@ -371,10 +373,7 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
                       ],
                       if (!isExpanded) ...[
                         const SizedBox(height: 15),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Text('${reward.points} pts', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: reward.pointsColor, fontFamily: 'Poppins-Medium')),
-                        ),
+                        Align(alignment: Alignment.centerRight, child: Text('${reward.points} pts', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: reward.pointsColor, fontFamily: 'Poppins-Medium'))),
                       ]
                     ],
                   ),
@@ -398,19 +397,19 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem('assets/icons/home_icon.png', 'home'),
-          _buildNavItem('assets/icons/stat_icon.png', 'stats'),
+          _buildNavItem('assets/icons/home_icon.png', 'home', 0),
+          _buildNavItem('assets/icons/stat_icon.png', 'stats', 1),
           _buildAddButton(),
-          _buildNavItem('assets/icons/calendar_icon.png', 'calendar'),
-          _buildNavItem('assets/icons/setting_icon.png', 'settings'),
+          _buildNavItem('assets/icons/calendar_icon.png', 'calendar', 2),
+          _buildNavItem('assets/icons/setting_icon.png', 'settings', 3),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(String iconPath, String label) {
+  Widget _buildNavItem(String iconPath, String label, int index) {
     return GestureDetector(
-      onTap: _backToMain,
+      onTap: () => _navigateToIndex(index),
       behavior: HitTestBehavior.opaque,
       child: Column(
         mainAxisSize: MainAxisSize.min,

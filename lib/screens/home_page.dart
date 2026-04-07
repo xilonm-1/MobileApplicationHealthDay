@@ -18,7 +18,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final supabase = Supabase.instance.client;
 
-  // สร้างตัวแปรเก็บข้อมูล 3 ส่วน
   Map<String, dynamic>? userData;
   Map<String, dynamic>? userGoal;
   Map<String, dynamic>? dailyRecord;
@@ -31,14 +30,12 @@ class _HomePageState extends State<HomePage> {
     _fetchUserData();
   }
 
-  // ฟังก์ชันดึงข้อมูลแบบครบวงจร
   Future<void> _fetchUserData() async {
     try {
       final user = supabase.auth.currentUser;
       if (user != null) {
         final String todayDate = DateTime.now().toIso8601String().split('T')[0];
 
-        // ✅ เพิ่ม .limit(1) ทุกอัน เพื่อป้องกัน Error กรณี Database มีข้อมูลซ้ำ
         final responses = await Future.wait([
           supabase
               .from('users')
@@ -61,8 +58,6 @@ class _HomePageState extends State<HomePage> {
               .maybeSingle(),
         ]);
 
-        // ❌ เอา Navigator ตรงนี้ออกไปแล้ว (ห้ามใส่ในหน้านี้เด็ดขาด)
-
         if (mounted) {
           setState(() {
             userData = responses[0];
@@ -74,9 +69,7 @@ class _HomePageState extends State<HomePage> {
       }
     } catch (e) {
       debugPrint('Error fetching user data: $e');
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -91,10 +84,8 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     }
-    // ==========================================
-    // คำนวณข้อมูลที่จะแสดงบนหน้าจอ
-    // ==========================================
 
+    // คำนวณข้อมูล Progress เหมือนเดิม
     int currentSteps = dailyRecord?['steps'] ?? 0;
     int targetSteps = userGoal?['target_steps'] ?? 8000;
     double stepsProgress = targetSteps > 0
@@ -117,13 +108,14 @@ class _HomePageState extends State<HomePage> {
       child: RefreshIndicator(
         onRefresh: _fetchUserData,
         color: AppColors.primaryOrangeGradient.colors.first,
-
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildProfileHeader3Layers(context),
+              _buildProfileHeader3Layers(
+                context,
+              ), // ส่วนที่ปรับ Logic ด้านในแต่หน้าตาเดิม
               Padding(
                 padding: const EdgeInsets.all(25),
                 child: Column(
@@ -232,12 +224,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildProfileHeader3Layers(BuildContext context) {
-    // ✅ ดึงชื่อมาโชว์ ถ้ามีข้อมูลจะแสดงชื่อจริง ถ้าไม่มีแสดง Guest
     final username = userData?['username'] ?? "Guest";
     final fullName =
         "${userData?['first_name'] ?? ''} ${userData?['last_name'] ?? ''}"
             .trim();
     final displayName = fullName.isEmpty ? "Welcome!" : fullName;
+
+    // ดึงข้อมูลรูปภาพและยศ
+    final profileUrl = userData?['profile_image_url'];
+    final specialTitle = userData?['special_title'];
 
     final height = userData?['height_cm']?.toString() ?? "-";
     final weight = userData?['weight_kg']?.toString() ?? "-";
@@ -260,27 +255,29 @@ class _HomePageState extends State<HomePage> {
         ),
         child: Stack(
           children: [
+            // Blob เดิมของคุณ
             Positioned(
-              top: 25, 
+              top: 25,
               right: 20,
               child: _blobHelper(125, AppColors.moodGradient),
             ),
             Positioned(
-              top: -25, 
-              left: -20, 
-              child: _blobHelper(150,AppColors.moodGradient,), 
+              top: -25,
+              left: -20,
+              child: _blobHelper(150, AppColors.moodGradient),
             ),
-             Positioned(
-              bottom: 0, 
+            Positioned(
+              bottom: 0,
               left: -10,
-              child: _blobHelper(50,AppColors.moodGradient,),
+              child: _blobHelper(50, AppColors.moodGradient),
             ),
-             Positioned(
-              bottom: 0, 
-              right: -10, 
-              child: _blobHelper(70,AppColors.moodGradient,),
+            Positioned(
+              bottom: 0,
+              right: -10,
+              child: _blobHelper(70, AppColors.moodGradient),
             ),
 
+            // Glass Layer เดิม
             Positioned.fill(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
@@ -305,6 +302,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
+
             Container(
               padding: const EdgeInsets.only(
                 top: 60,
@@ -356,13 +354,20 @@ class _HomePageState extends State<HomePage> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const CircleAvatar(
+                      // ✅ แก้ไข: แสดงรูปโปรไฟล์จริงหรือ Icon Default โดยรักษารูปทรงเดิม
+                      CircleAvatar(
                         radius: 40,
-                        child: const Icon(
-                          Icons.person_outline,
-                          size: 55,
-                          color: Colors.white,
-                        ),
+                        backgroundColor: Colors.white24,
+                        backgroundImage: profileUrl != null
+                            ? NetworkImage(profileUrl)
+                            : null,
+                        child: profileUrl == null
+                            ? const Icon(
+                                Icons.person_outline,
+                                size: 55,
+                                color: Colors.white,
+                              )
+                            : null,
                       ),
                       const SizedBox(width: 15),
                       Expanded(
@@ -384,6 +389,61 @@ class _HomePageState extends State<HomePage> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+
+                            // ✅ เพิ่มยศ (ถ้ามี) แสดงใต้ชื่อแบบเล็กๆ ไม่รบกวน Layout
+                            if (specialTitle != null) ...[
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  // ไล่เฉดสีฟ้าเข้มไปฟ้าอ่อน
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF1E3C72), // ฟ้าเข้ม
+                                      Color(0xFF2A5298), // ฟ้ากลาง
+                                      Color(0xFF2193B0), // ฟ้าสดใส
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(
+                                        0xFF2193B0,
+                                      ).withOpacity(0.4),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.verified_rounded,
+                                      color: Colors.white,
+                                      size: 12,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      specialTitle.toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.5,
+                                        fontFamily: 'Poppins',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+
                             const SizedBox(height: 2),
                             Text(
                               "Height : $height cm   Weight : $weight kg",
@@ -406,6 +466,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // --- Helper Widgets อื่นๆ (GoalCard, StatusCard, ActionButton, GlassBox) ใช้ของเดิมทั้งหมด ---
   Widget _blobHelper(double size, LinearGradient gradient) {
     return Container(
       width: size,
