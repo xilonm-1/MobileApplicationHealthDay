@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../constants/app_colors.dart';
 import '../screens/main_screen.dart';
 import 'rewards_page.dart';
+import 'add_record_page.dart'; // อย่าลืมนำเข้าหน้า AddRecord
 
 class PointPage extends StatefulWidget {
   const PointPage({super.key});
@@ -24,6 +25,17 @@ class _PointPageState extends State<PointPage> {
   void initState() {
     super.initState();
     _fetchPointsData(_selectedDate);
+  }
+
+  // ✅ เพิ่มฟังก์ชันนำทางไปยัง Index ที่ต้องการใน MainScreen
+  void _navigateToIndex(int index) {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MainScreen(initialIndex: index),
+      ),
+      (route) => false,
+    );
   }
 
   Future<void> _fetchPointsData(DateTime date) async {
@@ -66,6 +78,8 @@ class _PointPageState extends State<PointPage> {
         bool moodRewarded = recordData['mood_rewarded'] ?? false;
 
         if (steps > 0) {
+          int stepPoints = (steps ~/ 1000) * 10;
+          if (stepRewarded) stepPoints += 100;
           int stepPoints = (steps ~/ 1000) * 10; // แต้มรายหน่วย
           if (stepRewarded) stepPoints += 100; // บวกโบนัสเป้าหมาย
           newEvents.add({
@@ -77,8 +91,8 @@ class _PointPageState extends State<PointPage> {
           });
         }
         if (water > 0) {
-          int waterPoints = water * 5; // แต้มรายแก้ว
-          if (waterRewarded) waterPoints += 50; // บวกโบนัสเป้าหมาย
+          int waterPoints = water * 5;
+          if (waterRewarded) waterPoints += 50;
           newEvents.add({
             'type': 'water',
             'label': 'Waters:',
@@ -88,8 +102,8 @@ class _PointPageState extends State<PointPage> {
           });
         }
         if (sleep > 0) {
-          int sleepPoints = sleep * 10; // แต้มรายชม.
-          if (sleepRewarded) sleepPoints += 50; // บวกโบนัสเป้าหมาย
+          int sleepPoints = sleep * 10;
+          if (sleepRewarded) sleepPoints += 50;
           newEvents.add({
             'type': 'sleep',
             'label': 'Sleeps:',
@@ -123,7 +137,6 @@ class _PointPageState extends State<PointPage> {
     }
   }
 
-  // ✅ ฟังก์ชันแสดง Pop-up กฎการให้คะแนนแบบใหม่ (ใช้ไอคอน Asset)
   void _showPointsRules() {
     showDialog(
       context: context,
@@ -143,53 +156,19 @@ class _PointPageState extends State<PointPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildRuleItem(
-              'assets/icons/water2_icon.png',
-              AppColors.waterGradient,
-              "Water",
-              "5 Pts / glass\n+50 Pts Goal Bonus",
-            ),
-            _buildRuleItem(
-              'assets/icons/sleep2_icon.png',
-              AppColors.sleepGradient,
-              "Sleep",
-              "10 Pts / hour\n+50 Pts Goal Bonus",
-            ),
-            _buildRuleItem(
-              'assets/icons/activity2_icon.png',
-              AppColors.stepsGradient,
-              "Steps",
-              "10 Pts / 1,000 steps\n+100 Pts Goal Bonus",
-            ),
-            _buildRuleItem(
-              'assets/icons/mood2_icon.png',
-              AppColors.moodGradient,
-              "Mood",
-              "20 Pts for daily check-in",
-            ),
+            _buildRuleItem('assets/icons/water2_icon.png', AppColors.waterGradient, "Water", "5 Pts / glass\n+50 Pts Goal Bonus"),
+            _buildRuleItem('assets/icons/sleep2_icon.png', AppColors.sleepGradient, "Sleep", "10 Pts / hour\n+50 Pts Goal Bonus"),
+            _buildRuleItem('assets/icons/activity2_icon.png', AppColors.stepsGradient, "Steps", "10 Pts / 1,000 steps\n+100 Pts Goal Bonus"),
+            _buildRuleItem('assets/icons/mood2_icon.png', AppColors.moodGradient, "Mood", "20 Pts for daily check-in"),
             const SizedBox(height: 10),
-            const Text(
-              "*Goal Bonus is awarded once per day",
-              style: TextStyle(
-                fontSize: 10,
-                color: Colors.grey,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
+            const Text("*Goal Bonus is awarded once per day", style: TextStyle(fontSize: 10, color: Colors.grey, fontStyle: FontStyle.italic)),
           ],
         ),
         actions: [
           Center(
             child: TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(
-                "Got it!",
-                style: TextStyle(
-                  color: Colors.orange,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
+              child: const Text("Got it!", style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 16)),
             ),
           ),
         ],
@@ -197,50 +176,23 @@ class _PointPageState extends State<PointPage> {
     );
   }
 
-  Widget _buildRuleItem(
-    String assetPath,
-    LinearGradient gradient,
-    String title,
-    String desc,
-  ) {
+  Widget _buildRuleItem(String assetPath, LinearGradient gradient, String title, String desc) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              gradient: gradient,
-              shape: BoxShape.circle,
-            ),
-            child: Image.asset(
-              assetPath,
-              width: 20,
-              height: 20,
-              color: Colors.white,
-            ),
+            decoration: BoxDecoration(gradient: gradient, shape: BoxShape.circle),
+            child: Image.asset(assetPath, width: 20, height: 20, color: Colors.white),
           ),
           const SizedBox(width: 15),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    fontFamily: 'Poppins-Medium',
-                  ),
-                ),
-                Text(
-                  desc,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Colors.black54,
-                    fontFamily: 'Poppins',
-                  ),
-                ),
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, fontFamily: 'Poppins-Medium')),
+                Text(desc, style: const TextStyle(fontSize: 11, color: Colors.black54, fontFamily: 'Poppins')),
               ],
             ),
           ),
@@ -296,13 +248,7 @@ class _PointPageState extends State<PointPage> {
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(25),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 15, offset: const Offset(0, 5))],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(25),
@@ -311,37 +257,20 @@ class _PointPageState extends State<PointPage> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              decoration: const BoxDecoration(
-                gradient: AppColors.primaryBlueGradient,
-              ),
+              decoration: const BoxDecoration(gradient: AppColors.primaryBlueGradient),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Row(
                     children: [
-                      Icon(
-                        Icons.stars_rounded,
-                        color: AppColors.lightText,
-                        size: 28,
-                      ),
+                      Icon(Icons.stars_rounded, color: AppColors.lightText, size: 28),
                       SizedBox(width: 10),
-                      Text(
-                        'Current Balance',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: AppColors.lightText,
-                          fontFamily: 'Poppins-Medium',
-                        ),
-                      ),
+                      Text('Current Balance', style: TextStyle(fontSize: 18, color: AppColors.lightText, fontFamily: 'Poppins-Medium')),
                     ],
                   ),
                   GestureDetector(
                     onTap: _showPointsRules,
-                    child: const Icon(
-                      Icons.info_outline_rounded,
-                      color: AppColors.lightText,
-                      size: 22,
-                    ),
+                    child: const Icon(Icons.info_outline_rounded, color: AppColors.lightText, size: 22),
                   ),
                 ],
               ),
@@ -350,9 +279,7 @@ class _PointPageState extends State<PointPage> {
               onTap: () async {
                 await Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => RewardsShopPage(userPoints: _totalPoints),
-                  ),
+                  MaterialPageRoute(builder: (_) => RewardsShopPage(userPoints: _totalPoints)),
                 );
                 _fetchPointsData(_selectedDate);
               },
@@ -365,12 +292,7 @@ class _PointPageState extends State<PointPage> {
                 child: Center(
                   child: Text(
                     '$_totalPoints Pts',
-                    style: const TextStyle(
-                      fontSize: 42,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.lightText,
-                      fontFamily: 'Poppins-SemiBold',
-                    ),
+                    style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: AppColors.lightText, fontFamily: 'Poppins-SemiBold'),
                   ),
                 ),
               ),
@@ -442,10 +364,7 @@ class _PointPageState extends State<PointPage> {
               ],
             ),
             const Divider(height: 25, color: Colors.black12),
-            if (_dayEvents.isEmpty)
-              _buildEmptyState()
-            else
-              ..._dayEvents.map((item) => _buildStatRow(item)),
+            if (_dayEvents.isEmpty) _buildEmptyState() else ..._dayEvents.map((item) => _buildStatRow(item)),
           ],
         ),
       ),
@@ -460,18 +379,7 @@ class _PointPageState extends State<PointPage> {
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         children: [
-          // ไอคอน
-          Image.asset(
-            theme.iconPath,
-            width: 24,
-            height: 24,
-            fit: BoxFit.contain,
-            errorBuilder: (c, e, s) => Icon(
-              Icons.check_circle_outline,
-              color: theme.gradient.colors.first,
-              size: 24,
-            ),
-          ),
+          Image.asset(theme.iconPath, width: 24, height: 24, fit: BoxFit.contain, errorBuilder: (c, e, s) => Icon(Icons.check_circle_outline, color: theme.gradient.colors.first, size: 24)),
           const SizedBox(width: 15),
           
           // ส่วนเนื้อหา (หัวข้อ และ จำนวน อยู่บรรทัดเดียวกัน)
@@ -482,30 +390,12 @@ class _PointPageState extends State<PointPage> {
                 // หัวข้อ (เช่น Steps:, Waters:)
                 ShaderMask(
                   blendMode: BlendMode.srcIn,
-                  shaderCallback: (bounds) => theme.gradient.createShader(
-                    Rect.fromLTWH(0, 0, bounds.width, bounds.height),
-                  ),
-                  child: Text(
-                    item['label'],
-                    style: const TextStyle(
-                      fontFamily: 'Poppins-Medium',
-                      fontSize: 15,
-                    ),
-                  ),
+                  shaderCallback: (bounds) => theme.gradient.createShader(Rect.fromLTWH(0, 0, bounds.width, bounds.height)),
+                  child: Text(item['label'], style: const TextStyle(fontFamily: 'Poppins-Medium', fontSize: 15)),
                 ),
-                const SizedBox(width: 8), // ระยะห่างระหว่างหัวข้อกับจำนวน
-                
-                // จำนวน (เช่น 5000 steps, 8 glasses)
+                const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    "${item['value']} ${item['unit']}".trim(),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                      fontFamily: 'Poppins-SemiBold',
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  child: Text("${item['value']} ${item['unit']}".trim(), style: const TextStyle(fontSize: 16, color: Colors.black87, fontFamily: 'Poppins-SemiBold'), overflow: TextOverflow.ellipsis),
                 ),
               ],
             ),
@@ -515,22 +405,11 @@ class _PointPageState extends State<PointPage> {
           if (points != null)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: theme.gradient.colors.first.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
+              decoration: BoxDecoration(color: theme.gradient.colors.first.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
               child: ShaderMask(
                 blendMode: BlendMode.srcIn,
-                shaderCallback: (bounds) => theme.gradient.createShader(
-                  Rect.fromLTWH(0, 0, bounds.width, bounds.height),
-                ),
-                child: Text(
-                  '+$points Pts',
-                  style: const TextStyle(
-                    fontFamily: 'Poppins-SemiBold',
-                    fontSize: 14,
-                  ),
-                ),
+                shaderCallback: (bounds) => theme.gradient.createShader(Rect.fromLTWH(0, 0, bounds.width, bounds.height)),
+                child: Text('+$points Pts', style: const TextStyle(fontFamily: 'Poppins-SemiBold', fontSize: 14)),
               ),
             ),
         ],
@@ -538,34 +417,13 @@ class _PointPageState extends State<PointPage> {
     );
   }
 
-  // --- Helpers ---
   _StatTheme _getStatTheme(String type) {
     switch (type) {
-      case 'steps':
-        return _StatTheme(
-          'assets/icons/activity2_icon.png',
-          AppColors.stepsGradient,
-        );
-      case 'water':
-        return _StatTheme(
-          'assets/icons/water2_icon.png',
-          AppColors.waterGradient,
-        );
-      case 'sleep':
-        return _StatTheme(
-          'assets/icons/sleep2_icon.png',
-          AppColors.sleepGradient,
-        );
-      case 'mood':
-        return _StatTheme(
-          'assets/icons/mood2_icon.png',
-          AppColors.moodGradient,
-        );
-      default:
-        return _StatTheme(
-          'assets/icons/activity2_icon.png',
-          AppColors.stepsGradient,
-        );
+      case 'steps': return _StatTheme('assets/icons/activity2_icon.png', AppColors.stepsGradient);
+      case 'water': return _StatTheme('assets/icons/water2_icon.png', AppColors.waterGradient);
+      case 'sleep': return _StatTheme('assets/icons/sleep2_icon.png', AppColors.sleepGradient);
+      case 'mood': return _StatTheme('assets/icons/mood2_icon.png', AppColors.moodGradient);
+      default: return _StatTheme('assets/icons/activity2_icon.png', AppColors.stepsGradient);
     }
   }
 
@@ -602,35 +460,14 @@ class _PointPageState extends State<PointPage> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: const Row(
                 children: [
-                  Icon(
-                    Icons.arrow_back_ios_new,
-                    size: 14,
-                    color: AppColors.greyText,
-                  ),
+                  Icon(Icons.arrow_back_ios_new, size: 14, color: AppColors.greyText),
                   SizedBox(width: 5),
-                  Text(
-                    "Back",
-                    style: TextStyle(
-                      color: AppColors.greyText,
-                      fontFamily: 'Poppins-Medium',
-                    ),
-                  ),
+                  Text("Back", style: TextStyle(color: AppColors.greyText, fontFamily: 'Poppins-Medium')),
                 ],
               ),
             ),
           ),
-          const Expanded(
-            child: Center(
-              child: Text(
-                "Points",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontFamily: 'Poppins-Medium',
-                  color: AppColors.greyText,
-                ),
-              ),
-            ),
-          ),
+          const Expanded(child: Center(child: Text("Points", style: TextStyle(fontSize: 20, fontFamily: 'Poppins-Medium', color: AppColors.greyText)))),
           const SizedBox(width: 60),
         ],
       ),
@@ -642,29 +479,13 @@ class _PointPageState extends State<PointPage> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.grey.withOpacity(0.1),
-          shape: BoxShape.circle,
-        ),
+        decoration: BoxDecoration(color: Colors.grey.withOpacity(0.1), shape: BoxShape.circle),
         child: Icon(icon, size: 14, color: AppColors.greyText),
       ),
     );
   }
 
-  String _getMonthName(int month) => [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ][month - 1];
+  String _getMonthName(int month) => ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][month - 1];
 
   void _changeDate(int days) {
     setState(() => _selectedDate = _selectedDate.add(Duration(days: days)));
@@ -689,70 +510,54 @@ class _PointPageState extends State<PointPage> {
       height: 100,
       decoration: BoxDecoration(
         color: AppColors.lightText,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(35),
-          topRight: Radius.circular(35),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
+        borderRadius: const BorderRadius.only(topLeft: Radius.circular(35), topRight: Radius.circular(35)),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5))],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem('assets/icons/home_icon.png', 'home'),
-          _buildNavItem('assets/icons/stat_icon.png', 'stats'),
+          _buildNavItem('assets/icons/home_icon.png', 'home', 0),
+          _buildNavItem('assets/icons/stat_icon.png', 'stats', 1),
           _buildAddButton(),
-          _buildNavItem('assets/icons/calendar_icon.png', 'calendar'),
-          _buildNavItem('assets/icons/setting_icon.png', 'settings'),
+          _buildNavItem('assets/icons/calendar_icon.png', 'calendar', 2),
+          _buildNavItem('assets/icons/setting_icon.png', 'settings', 3),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(String iconPath, String label) {
+  Widget _buildNavItem(String iconPath, String label, int index) {
     return GestureDetector(
-      onTap: () => Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const MainScreen()),
-        (route) => false,
-      ),
+      onTap: () => _navigateToIndex(index), // ✅ เรียกใช้ฟังก์ชันนำทาง
+      behavior: HitTestBehavior.opaque,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Image.asset(
-            iconPath,
-            width: 28,
-            height: 28,
-            color: AppColors.greyText,
-          ),
+          Image.asset(iconPath, width: 28, height: 28, color: AppColors.greyText),
           const SizedBox(height: 4),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.greyText,
-              fontFamily: 'Poppins',
-            ),
-          ),
+          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.greyText, fontFamily: 'Poppins')),
         ],
       ),
     );
   }
 
   Widget _buildAddButton() {
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: AppColors.primaryOrangeGradient,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AddRecordPage()),
+        );
+      },
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: AppColors.primaryOrangeGradient,
+        ),
+        child: const Icon(Icons.add, color: Colors.white, size: 35),
       ),
-      child: const Icon(Icons.add, color: Colors.white, size: 35),
     );
   }
 }
