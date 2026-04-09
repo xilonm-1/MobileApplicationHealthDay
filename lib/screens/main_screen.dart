@@ -11,7 +11,7 @@ import 'add_record_page.dart';
 import '../service/health_advice_service.dart';
 
 class MainScreen extends StatefulWidget {
-  final int initialIndex; // ✅ รับค่า index เริ่มต้น
+  final int initialIndex;
   const MainScreen({super.key, this.initialIndex = 0});
 
   @override
@@ -19,7 +19,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  late int _currentIndex; // ✅ ใช้ late เพื่อกำหนดค่าใน initState
+  late int _currentIndex;
   Timer? _waterTimer;
 
   final List<Widget> _pages = [
@@ -32,7 +32,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    _currentIndex = widget.initialIndex; // ✅ ตั้งค่าหน้าที่เลือกตามที่ส่งมา
+    _currentIndex = widget.initialIndex;
 
     // 1. เริ่มระบบแจ้งเตือนดื่มน้ำ
     _startSmartWaterReminder();
@@ -45,7 +45,7 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-  // ✅ ระบบคำแนะนำสุขภาพอัตโนมัติ
+  // ระบบคำแนะนำสุขภาพอัตโนมัติ
   Future<void> _triggerHealthAdvice() async {
     final prefs = await SharedPreferences.getInstance();
     // เช็คสวิตช์เปิด/ปิดจากหน้า Setting (ใช้คีย์ 'health_advice_enabled' ให้ตรงกับ Service)
@@ -62,12 +62,10 @@ class _MainScreenState extends State<MainScreen> {
     super.dispose();
   }
 
-  // ==================================================================
   // SMART WATER REMINDER LOGIC
-  // ==================================================================
   void _startSmartWaterReminder() {
     Future.delayed(const Duration(seconds: 2), () {
-      _processSmartReminder(); 
+      _processSmartReminder();
 
       // เช็คทุก 1 ชั่วโมง
       _waterTimer = Timer.periodic(const Duration(hours: 1), (timer) async {
@@ -78,7 +76,7 @@ class _MainScreenState extends State<MainScreen> {
 
   Future<void> _processSmartReminder() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    
+
     bool isWaterReminderOn = prefs.getBool('waterReminder') ?? true;
     if (!isWaterReminderOn) return;
 
@@ -90,7 +88,7 @@ class _MainScreenState extends State<MainScreen> {
     if (lastNotifiedStr != null) {
       DateTime lastNotified = DateTime.parse(lastNotifiedStr);
       if (DateTime.now().difference(lastNotified).inMinutes < 60) {
-        return; 
+        return;
       }
     }
 
@@ -102,25 +100,43 @@ class _MainScreenState extends State<MainScreen> {
       final String todayDate = DateTime.now().toIso8601String().split('T')[0];
 
       final responses = await Future.wait([
-        supabase.from('user_goals').select('target_water').eq('user_id', user.id).maybeSingle(),
-        supabase.from('daily_records').select('water_glasses').eq('user_id', user.id).eq('record_date', todayDate).maybeSingle(),
+        supabase
+            .from('user_goals')
+            .select('target_water')
+            .eq('user_id', user.id)
+            .maybeSingle(),
+        supabase
+            .from('daily_records')
+            .select('water_glasses')
+            .eq('user_id', user.id)
+            .eq('record_date', todayDate)
+            .maybeSingle(),
       ]);
 
-      int targetWater = responses[0]?['target_water'] ?? 8; 
-      int currentWater = responses[1]?['water_glasses'] ?? 0; 
+      int targetWater = responses[0]?['target_water'] ?? 8;
+      int currentWater = responses[1]?['water_glasses'] ?? 0;
 
-      if (currentWater >= targetWater) return; 
+      if (currentWater >= targetWater) return;
 
-      String msg = "💧 It's time to drink water! ($currentWater/$targetWater glasses)";
-      
+      String msg =
+          "💧 It's time to drink water! ($currentWater/$targetWater glasses)";
+
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(msg, style: const TextStyle(fontFamily: 'Poppins-Medium', color: Colors.white)),
+            content: Text(
+              msg,
+              style: const TextStyle(
+                fontFamily: 'Poppins-Medium',
+                color: Colors.white,
+              ),
+            ),
             backgroundColor: const Color(0xFF2D7D9A),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
             margin: const EdgeInsets.only(bottom: 120, left: 20, right: 20),
             duration: const Duration(seconds: 4),
           ),
@@ -132,8 +148,10 @@ class _MainScreenState extends State<MainScreen> {
         'message': msg,
       });
 
-      await prefs.setString('last_water_notification_time', DateTime.now().toIso8601String());
-
+      await prefs.setString(
+        'last_water_notification_time',
+        DateTime.now().toIso8601String(),
+      );
     } catch (e) {
       debugPrint('Error Smart Reminder: $e');
     }
@@ -143,10 +161,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: Container(
         height: 100,
         decoration: BoxDecoration(
@@ -168,8 +183,12 @@ class _MainScreenState extends State<MainScreen> {
           children: [
             _buildCustomNavItem('assets/icons/home_icon.png', 'home', 0),
             _buildCustomNavItem('assets/icons/stat_icon.png', 'stats', 1),
-            _buildAddButton(), 
-            _buildCustomNavItem('assets/icons/calendar_icon.png', 'calendar', 2),
+            _buildAddButton(),
+            _buildCustomNavItem(
+              'assets/icons/calendar_icon.png',
+              'calendar',
+              2,
+            ),
             _buildCustomNavItem('assets/icons/setting_icon.png', 'settings', 3),
           ],
         ),
@@ -225,7 +244,9 @@ class _MainScreenState extends State<MainScreen> {
           gradient: AppColors.primaryOrangeGradient,
           boxShadow: [
             BoxShadow(
-              color: AppColors.primaryOrangeGradient.colors.first.withOpacity(0.3),
+              color: AppColors.primaryOrangeGradient.colors.first.withOpacity(
+                0.3,
+              ),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),

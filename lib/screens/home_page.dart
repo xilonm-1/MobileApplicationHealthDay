@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../constants/app_colors.dart';
-import '../widgets/background_wrapper.dart';
 import 'notification_page.dart';
 import 'rewards_page.dart';
 import 'points_page.dart';
@@ -29,7 +28,6 @@ class _HomePageState extends State<HomePage> {
     _fetchUserData();
   }
 
-  // ✅ เพิ่มตัวนี้เพื่อให้หน้า Home อัปเดตข้อมูลทุกครั้งที่ถูกกลับมาหา
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -67,6 +65,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
+        backgroundColor: AppColors.backgroundColor,
         body: Center(
           child: CircularProgressIndicator(
             color: AppColors.primaryOrangeGradient.colors.first,
@@ -87,74 +86,77 @@ class _HomePageState extends State<HomePage> {
     String currentMood = dailyRecord?['mood'] ?? 'none';
     String displayMood = currentMood == 'none' ? 'None' : currentMood[0].toUpperCase() + currentMood.substring(1);
 
-    return BackgroundWrapper(
-      child: RefreshIndicator(
-        onRefresh: _fetchUserData,
-        color: AppColors.primaryOrangeGradient.colors.first,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildProfileHeader3Layers(context),
-              Padding(
-                padding: const EdgeInsets.all(25),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text("Today's Goals", style: TextStyle(fontSize: 20, fontFamily: 'Poppins-Medium', color: AppColors.darkText)),
-                    const SizedBox(height: 15),
-                    Row(
-                      children: [
-                        _buildGoalCard(
-                          iconPath: 'assets/icons/activity_icon.png',
-                          title: "$currentSteps",
-                          total: "/$targetSteps Steps",
-                          titleGradient: AppColors.stepsGradient,
-                          progress: stepsProgress,
-                          progressGradient: AppColors.stepsGradient,
-                        ),
-                        const SizedBox(width: 15),
-                        _buildGoalCard(
-                          iconPath: 'assets/icons/water_icon.png',
-                          title: "$currentWater",
-                          total: "/$targetWater Glasses",
-                          titleGradient: AppColors.waterGradient,
-                          progress: waterProgress,
-                          progressGradient: AppColors.waterGradient,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 15),
-                    const Text("Body Status", style: TextStyle(fontSize: 20, fontFamily: 'Poppins-Medium', color: AppColors.darkText)),
-                    const SizedBox(height: 15),
-                    Row(
-                      children: [
-                        Expanded(child: _buildStatusCard(iconPath: 'assets/icons/sleep_icon.png', text: "Sleep: $currentSleep hrs", textColor: AppColors.sleepGradient.colors.last)),
-                        const SizedBox(width: 15),
-                        Expanded(child: _buildStatusCard(iconPath: 'assets/icons/mood_icon.png', text: "Mood: $displayMood", textColor: AppColors.moodGradient.colors.first)),
-                      ],
-                    ),
-                    const SizedBox(height: 15),
-                    const Text("Features", style: TextStyle(fontSize: 20, fontFamily: 'Poppins-Medium', color: AppColors.darkText)),
-                    const SizedBox(height: 15),
-                    _buildActionButton(
-                      iconPath: 'assets/icons/rewards_icon.png',
-                      title: "Redeem rewards",
-                      titleGradient: AppColors.primaryOrangeGradient,
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const RewardsShopPage())),
-                    ),
-                    const SizedBox(height: 15),
-                    _buildActionButton(
-                      iconPath: 'assets/icons/point_icon.png',
-                      title: "Your points",
-                      titleGradient: AppColors.primaryOrangeGradient,
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PointPage())),
-                    ),
-                  ],
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: _fetchUserData,
+          color: AppColors.primaryOrangeGradient.colors.first,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildProfileHeader3Layers(context),
+                Padding(
+                  padding: const EdgeInsets.all(25),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("Today's Goals", style: TextStyle(fontSize: 20, fontFamily: 'Poppins-Medium', color: AppColors.darkText)),
+                      const SizedBox(height: 15),
+                      Row(
+                        children: [
+                          _buildGoalCard(
+                            iconPath: 'assets/icons/activity_icon.png',
+                            title: "$currentSteps",
+                            total: "/$targetSteps Steps",
+                            titleGradient: AppColors.stepsGradient,
+                            progress: stepsProgress,
+                            progressGradient: AppColors.stepsGradient,
+                          ),
+                          const SizedBox(width: 15),
+                          _buildGoalCard(
+                            iconPath: 'assets/icons/water_icon.png',
+                            title: "$currentWater",
+                            total: "/$targetWater Glasses",
+                            titleGradient: AppColors.waterGradient,
+                            progress: waterProgress,
+                            progressGradient: AppColors.waterGradient,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 15),
+                      const Text("Body Status", style: TextStyle(fontSize: 20, fontFamily: 'Poppins-Medium', color: AppColors.darkText)),
+                      const SizedBox(height: 15),
+                      Row(
+                        children: [
+                          Expanded(child: _buildStatusCard(iconPath: 'assets/icons/sleep_icon.png', text: "Sleep: $currentSleep hrs", textColor: AppColors.sleepGradient.colors.last)),
+                          const SizedBox(width: 15),
+                          Expanded(child: _buildStatusCard(iconPath: 'assets/icons/mood_icon.png', text: "Mood: $displayMood", textColor: AppColors.moodGradient.colors.first)),
+                        ],
+                      ),
+                      const SizedBox(height: 15),
+                      const Text("Features", style: TextStyle(fontSize: 20, fontFamily: 'Poppins-Medium', color: AppColors.darkText)),
+                      const SizedBox(height: 15),
+                      _buildActionButton(
+                        iconPath: 'assets/icons/rewards_icon.png',
+                        title: "Redeem rewards",
+                        titleGradient: AppColors.primaryOrangeGradient,
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const RewardsShopPage())),
+                      ),
+                      const SizedBox(height: 15),
+                      _buildActionButton(
+                        iconPath: 'assets/icons/point_icon.png',
+                        title: "Your points",
+                        titleGradient: AppColors.primaryOrangeGradient,
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PointPage())),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -165,7 +167,6 @@ class _HomePageState extends State<HomePage> {
     final username = userData?['username'] ?? "Guest";
     final fullName = "${userData?['first_name'] ?? ''} ${userData?['last_name'] ?? ''}".trim();
     final displayName = fullName.isEmpty ? "Welcome!" : fullName;
-
     final profileUrl = userData?['profile_image_url'];
     final specialTitle = userData?['special_title'];
     final height = userData?['height_cm']?.toString() ?? "-";
@@ -187,7 +188,6 @@ class _HomePageState extends State<HomePage> {
             Positioned(top: -25, left: -20, child: _blobHelper(150, AppColors.moodGradient)),
             Positioned(bottom: 0, left: -10, child: _blobHelper(50, AppColors.moodGradient)),
             Positioned(bottom: 0, right: -10, child: _blobHelper(70, AppColors.moodGradient)),
-
             Positioned.fill(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
@@ -205,7 +205,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-
             Container(
               padding: const EdgeInsets.only(top: 60, left: 25, right: 25, bottom: 30),
               child: Column(
@@ -230,7 +229,6 @@ class _HomePageState extends State<HomePage> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // ✅ แสดงรูปโปรไฟล์จาก URL หรือ Icon Default
                       CircleAvatar(
                         radius: 40,
                         backgroundColor: Colors.white24,
@@ -246,8 +244,6 @@ class _HomePageState extends State<HomePage> {
                           children: [
                             Text(username, style: const TextStyle(color: AppColors.greyText, fontSize: 14)),
                             Text(displayName, style: const TextStyle(color: AppColors.greyText, fontSize: 22, fontWeight: FontWeight.bold)),
-                            
-                            // ✅ Special Title (Badge สีฟ้าไล่เฉด)
                             if (specialTitle != null) ...[
                               const SizedBox(height: 4),
                               Container(

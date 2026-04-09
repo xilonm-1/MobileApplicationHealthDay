@@ -22,8 +22,8 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _heightController = TextEditingController();
 
-  File? _imageFile; 
-  String? _currentImageUrl; 
+  File? _imageFile;
+  String? _currentImageUrl;
   bool _isLoading = true;
   bool _isSaving = false;
 
@@ -61,7 +61,7 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
     }
   }
 
-  // 2. ฟังก์ชันเลือกรูปภาพ (รับ Source จากเมนูตัวเลือก)
+  // 2. ฟังก์ชันเลือกรูปภาพ จาก Camera หรือ Gallery
   Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
     try {
@@ -100,12 +100,19 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
             Container(
               width: 40,
               height: 5,
-              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             const SizedBox(height: 20),
             const Text(
               "Select Profile Picture",
-              style: TextStyle(fontFamily: 'Poppins-SemiBold', fontSize: 18, color: AppColors.darkText),
+              style: TextStyle(
+                fontFamily: 'Poppins-SemiBold',
+                fontSize: 18,
+                color: AppColors.darkText,
+              ),
             ),
             const SizedBox(height: 25),
             Row(
@@ -136,18 +143,28 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
     );
   }
 
-  Widget _buildOptionItem({required IconData icon, required String label, required VoidCallback onTap}) {
+  Widget _buildOptionItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(15),
-            decoration: BoxDecoration(color: Colors.grey[100], shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              shape: BoxShape.circle,
+            ),
             child: Icon(icon, color: AppColors.darkText, size: 30),
           ),
           const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontFamily: 'Poppins-Medium', fontSize: 14)),
+          Text(
+            label,
+            style: const TextStyle(fontFamily: 'Poppins-Medium', fontSize: 14),
+          ),
         ],
       ),
     );
@@ -155,55 +172,63 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
 
   // 4. ฟังก์ชันอัปโหลดและบันทึก
   Future<void> _saveData() async {
-  setState(() => _isSaving = true);
-  try {
-    final user = supabase.auth.currentUser;
-    if (user == null) return;
+    setState(() => _isSaving = true);
+    try {
+      final user = supabase.auth.currentUser;
+      if (user == null) return;
 
-    String? finalImageUrl = _currentImageUrl;
+      String? finalImageUrl = _currentImageUrl;
 
-    if (_imageFile != null) {
-      // ✅ แก้ปัญหา _Namespace error โดยการอ่านไฟล์เป็น Bytes ก่อนอัปโหลด
-      final fileBytes = await _imageFile!.readAsBytes();
-      final fileExt = p.extension(_imageFile!.path);
-      final fileName = '${user.id}_${DateTime.now().millisecondsSinceEpoch}$fileExt';
+      if (_imageFile != null) {
+        final fileBytes = await _imageFile!.readAsBytes();
+        final fileExt = p.extension(_imageFile!.path);
+        final fileName =
+            '${user.id}_${DateTime.now().millisecondsSinceEpoch}$fileExt';
 
-      // ✅ ใช้ uploadBinary แทนการส่งไฟล์ตรงๆ
-      await supabase.storage.from('profiles').uploadBinary(
-            fileName,
-            fileBytes,
-            fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
-          );
+        await supabase.storage
+            .from('profiles')
+            .uploadBinary(
+              fileName,
+              fileBytes,
+              fileOptions: const FileOptions(
+                cacheControl: '3600',
+                upsert: true,
+              ),
+            );
 
-      finalImageUrl = supabase.storage.from('profiles').getPublicUrl(fileName);
+        finalImageUrl = supabase.storage
+            .from('profiles')
+            .getPublicUrl(fileName);
+      }
+
+      await supabase
+          .from('users')
+          .update({
+            'first_name': _firstNameController.text.trim(),
+            'last_name': _lastNameController.text.trim(),
+            'weight_kg': double.tryParse(_weightController.text),
+            'height_cm': double.tryParse(_heightController.text),
+            'profile_image_url': finalImageUrl,
+          })
+          .eq('user_id', user.id);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Profile updated successfully! 🎉")),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      debugPrint("Error saving data: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
-
-    // อัปเดตข้อมูลลงตาราง users
-    await supabase.from('users').update({
-      'first_name': _firstNameController.text.trim(),
-      'last_name': _lastNameController.text.trim(),
-      'weight_kg': double.tryParse(_weightController.text),
-      'height_cm': double.tryParse(_heightController.text),
-      'profile_image_url': finalImageUrl,
-    }).eq('user_id', user.id);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Profile updated successfully! 🎉")),
-      );
-      Navigator.pop(context);
-    }
-  } catch (e) {
-    debugPrint("Error saving data: $e");
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
-      );
-    }
-  } finally {
-    if (mounted) setState(() => _isSaving = false);
   }
-}
 
   @override
   void dispose() {
@@ -222,7 +247,9 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
         children: [
           _buildBackgroundDecorations(),
           _isLoading
-              ? const Center(child: CircularProgressIndicator(color: Color(0xFF2D7D9A)))
+              ? const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF2D7D9A)),
+                )
               : SafeArea(
                   child: SingleChildScrollView(
                     child: Column(
@@ -231,9 +258,11 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
                         const SizedBox(height: 20),
                         _buildGlassCard(),
                         const SizedBox(height: 30),
-                        _isSaving 
-                          ? const CircularProgressIndicator(color: Colors.orange) 
-                          : _buildSaveButton(),
+                        _isSaving
+                            ? const CircularProgressIndicator(
+                                color: Colors.orange,
+                              )
+                            : _buildSaveButton(),
                         const SizedBox(height: 40),
                       ],
                     ),
@@ -256,14 +285,32 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
               child: const Row(
                 children: [
-                  Icon(Icons.arrow_back_ios_new, size: 16, color: AppColors.greyText),
+                  Icon(
+                    Icons.arrow_back_ios_new,
+                    size: 16,
+                    color: AppColors.greyText,
+                  ),
                   SizedBox(width: 8),
-                  Text("Back", style: TextStyle(color: AppColors.greyText, fontFamily: 'Poppins-Medium', fontSize: 16)),
+                  Text(
+                    "Back",
+                    style: TextStyle(
+                      color: AppColors.greyText,
+                      fontFamily: 'Poppins-Medium',
+                      fontSize: 16,
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
-          const Text("Profile", style: TextStyle(color: AppColors.greyText, fontSize: 18, fontFamily: 'Poppins-Medium')),
+          const Text(
+            "Profile",
+            style: TextStyle(
+              color: AppColors.greyText,
+              fontSize: 18,
+              fontFamily: 'Poppins-Medium',
+            ),
+          ),
           const SizedBox(width: 80),
         ],
       ),
@@ -293,9 +340,17 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
                   const SizedBox(height: 15),
                   _buildTextField(_lastNameController, "Last Name"),
                   const SizedBox(height: 15),
-                  _buildTextField(_weightController, "Weight (kg)", isNumber: true),
+                  _buildTextField(
+                    _weightController,
+                    "Weight (kg)",
+                    isNumber: true,
+                  ),
                   const SizedBox(height: 15),
-                  _buildTextField(_heightController, "Height (cm)", isNumber: true),
+                  _buildTextField(
+                    _heightController,
+                    "Height (cm)",
+                    isNumber: true,
+                  ),
                 ],
               ),
             ),
@@ -318,15 +373,31 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
                 color: Colors.grey.shade200,
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 3),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 5))],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
                 image: _imageFile != null
-                    ? DecorationImage(image: FileImage(_imageFile!), fit: BoxFit.cover)
+                    ? DecorationImage(
+                        image: FileImage(_imageFile!),
+                        fit: BoxFit.cover,
+                      )
                     : (_currentImageUrl != null
-                        ? DecorationImage(image: NetworkImage(_currentImageUrl!), fit: BoxFit.cover)
-                        : null),
+                          ? DecorationImage(
+                              image: NetworkImage(_currentImageUrl!),
+                              fit: BoxFit.cover,
+                            )
+                          : null),
               ),
               child: (_imageFile == null && _currentImageUrl == null)
-                  ? const Icon(Icons.person_outline, size: 55, color: Colors.white)
+                  ? const Icon(
+                      Icons.person_outline,
+                      size: 55,
+                      color: Colors.white,
+                    )
                   : null,
             ),
           ),
@@ -338,8 +409,15 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
               child: Container(
                 width: 32,
                 height: 32,
-                decoration: const BoxDecoration(color: AppColors.darkText, shape: BoxShape.circle),
-                child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                decoration: const BoxDecoration(
+                  color: AppColors.darkText,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.camera_alt,
+                  color: Colors.white,
+                  size: 16,
+                ),
               ),
             ),
           ),
@@ -348,23 +426,44 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint, {bool isNumber = false}) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String hint, {
+    bool isNumber = false,
+  }) {
     return Container(
       height: 50,
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.9),
         borderRadius: BorderRadius.circular(25),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 5, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: TextField(
         controller: controller,
         keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-        style: const TextStyle(fontFamily: 'Poppins-Medium', color: AppColors.darkText, fontSize: 14),
+        style: const TextStyle(
+          fontFamily: 'Poppins-Medium',
+          color: AppColors.darkText,
+          fontSize: 14,
+        ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(color: Colors.grey, fontSize: 14, fontFamily: 'Poppins-Medium'),
+          hintStyle: const TextStyle(
+            color: Colors.grey,
+            fontSize: 14,
+            fontFamily: 'Poppins-Medium',
+          ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 25, vertical: 15),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 25,
+            vertical: 15,
+          ),
         ),
       ),
     );
@@ -381,10 +480,25 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
           decoration: BoxDecoration(
             gradient: AppColors.primaryOrangeGradient,
             borderRadius: BorderRadius.circular(15),
-            boxShadow: [BoxShadow(color: AppColors.primaryOrangeGradient.colors.last.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))],
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primaryOrangeGradient.colors.last.withOpacity(
+                  0.3,
+                ),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
           ),
           child: const Center(
-            child: Text("Save Changes", style: TextStyle(color: Colors.white, fontSize: 18, fontFamily: 'Poppins-SemiBold')),
+            child: Text(
+              "Save Changes",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontFamily: 'Poppins-SemiBold',
+              ),
+            ),
           ),
         ),
       ),
@@ -394,10 +508,33 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
   Widget _buildBackgroundDecorations() {
     return Stack(
       children: [
-        Positioned(top: -40, left: -60, child: Container(width: 180, height: 180, decoration: BoxDecoration(shape: BoxShape.circle, gradient: AppColors.primaryOrangeGradient.scale(0.7)))),
-        Positioned(top: 100, right: -50, child: _orb(200, AppColors.primaryBlueGradient)),
-        Positioned(bottom: 250, left: -50, child: _orb(250, AppColors.primaryBlueGradient)),
-        Positioned(bottom: -50, right: -50, child: _orb(300, AppColors.primaryOrangeGradient)),
+        Positioned(
+          top: -40,
+          left: -60,
+          child: Container(
+            width: 180,
+            height: 180,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: AppColors.primaryOrangeGradient.scale(0.7),
+            ),
+          ),
+        ),
+        Positioned(
+          top: 100,
+          right: -50,
+          child: _orb(200, AppColors.primaryBlueGradient),
+        ),
+        Positioned(
+          bottom: 250,
+          left: -50,
+          child: _orb(250, AppColors.primaryBlueGradient),
+        ),
+        Positioned(
+          bottom: -50,
+          right: -50,
+          child: _orb(300, AppColors.primaryOrangeGradient),
+        ),
       ],
     );
   }

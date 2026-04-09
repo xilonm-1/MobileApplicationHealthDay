@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart'; // ดึงไฟล์สีมาใช้งาน
+import '../constants/app_colors.dart';
 import 'login_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -8,10 +8,10 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundColor, // ใช้สีพื้นหลังหลักจาก AppColors
+      backgroundColor: AppColors.backgroundColor,
       body: Stack(
         children: [
-          // 1. ส่วน Gradient ด้านบน (ไล่จากสีน้ำเงินหลักไปหาโปร่งใส/ขาว)
+          // 1. ส่วน Gradient
           Container(
             height: MediaQuery.of(context).size.height * 0.45,
             decoration: BoxDecoration(
@@ -19,8 +19,8 @@ class WelcomeScreen extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  AppColors.primaryBlueGradient.colors.first.withOpacity(0.8), // ใช้สีแรกจาก Blue Gradient
-                  AppColors.backgroundColor, // จบที่สีพื้นหลังแอปเพื่อให้กลืนกัน
+                  AppColors.primaryBlueGradient.colors.first.withOpacity(0.8),
+                  AppColors.backgroundColor,
                 ],
               ),
             ),
@@ -32,8 +32,6 @@ class WelcomeScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 100),
-                
-                // คำว่า WELCOME (แยกสีตามธีมแอป)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -42,7 +40,7 @@ class WelcomeScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primaryBlueGradient.colors.first, // สีน้ำเงินหลัก
+                        color: AppColors.primaryBlueGradient.colors.first,
                         letterSpacing: 2,
                         fontFamily: 'Poppins-Bold',
                       ),
@@ -52,23 +50,22 @@ class WelcomeScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primaryOrangeGradient.colors.last, // สีส้มหลัก
+                        color: AppColors.primaryOrangeGradient.colors.last,
                         letterSpacing: 2,
                         fontFamily: 'Poppins-Bold',
                       ),
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 10),
-                
-                // สโลแกน (ใช้สีข้อความเทา)
+
                 Text(
                   "\"Let's start recording your\nhealthy\"",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.greyText, // ใช้สีเทาจาก AppColors
+                    color: AppColors.greyText,
                     fontStyle: FontStyle.italic,
                     fontFamily: 'Poppins-Medium',
                   ),
@@ -77,7 +74,7 @@ class WelcomeScreen extends StatelessWidget {
             ),
           ),
 
-          // 3. ปุ่ม Get Started ด้านล่าง
+          // 3. ปุ่ม Get Started ด
           Align(
             alignment: const Alignment(0, 0.75),
             child: Padding(
@@ -86,19 +83,21 @@ class WelcomeScreen extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const LoginScreen(),
+                    ),
                   );
                 },
                 child: Container(
                   width: double.infinity,
                   height: 55,
                   decoration: BoxDecoration(
-                    // ใช้ Gradient สีน้ำเงินหลักสำหรับปุ่มเพื่อให้ดูพรีเมียม
-                    gradient: AppColors.primaryBlueGradient, 
+                    gradient: AppColors.primaryBlueGradient,
                     borderRadius: BorderRadius.circular(15),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primaryBlueGradient.colors.last.withOpacity(0.3),
+                        color: AppColors.primaryBlueGradient.colors.last
+                            .withOpacity(0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -108,7 +107,7 @@ class WelcomeScreen extends StatelessWidget {
                     child: Text(
                       "Get Started",
                       style: TextStyle(
-                        color: AppColors.lightText, // สีขาว
+                        color: AppColors.lightText,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'Poppins-SemiBold',

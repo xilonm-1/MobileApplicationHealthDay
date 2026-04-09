@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'welcome_screen.dart'; // 1. เปลี่ยนการนำเข้าไฟล์เป็น welcome_screen
+import 'welcome_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -33,11 +33,10 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(milliseconds: 800));
     if (mounted) setState(() => _opacity3 = 1.0);
 
-    // ✅ แก้ไข: หน่วงเวลาค้างไว้ 3 วินาทีเพื่อให้เห็นโลโก้ที่สมบูรณ์ก่อนเปลี่ยนหน้า
-    await Future.delayed(const Duration(seconds: 3));
-    
+    // หน่วงเวลาค้างไว้ 2 วินาทีเพื่อให้เห็นโลโก้ที่สมบูรณ์ก่อนเปลี่ยนหน้า
+    await Future.delayed(const Duration(seconds: 2));
+
     if (mounted) {
-      // ✅ แก้ไข: เปลี่ยนจุดหมายปลายทางไปที่ WelcomeScreen
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const WelcomeScreen()),
@@ -51,36 +50,36 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: const Color(0xFFF7F9FA),
       body: Center(
         child: SizedBox(
-          width: 300, 
-          height: 300, 
+          width: 300,
+          height: 300,
           child: Stack(
             children: [
-              // ☀️ 1. พระอาทิตย์
+              // 1. พระอาทิตย์
               AnimatedOpacity(
                 opacity: _opacity1,
                 duration: const Duration(milliseconds: 800),
                 child: Align(
-                  alignment: const Alignment(-0.15, -0.3), 
+                  alignment: const Alignment(-0.15, -0.3),
                   child: Image.asset('assets/images/logo1.png', width: 130),
                 ),
               ),
-              
-              // 🌊 2. เส้นคลื่น
+
+              // 2. เส้นคลื่น
               AnimatedOpacity(
                 opacity: _opacity2,
                 duration: const Duration(milliseconds: 800),
                 child: Align(
-                  alignment: const Alignment(0, 0.0), 
+                  alignment: const Alignment(0, 0.0),
                   child: Image.asset('assets/images/logo2.png', width: 200),
                 ),
               ),
-              
-              // 🔡 3. ข้อความ HEALTHDAY
+
+              // 3. ข้อความ HEALTHDAY
               AnimatedOpacity(
                 opacity: _opacity3,
                 duration: const Duration(milliseconds: 800),
                 child: Align(
-                  alignment: const Alignment(0, 0.6), 
+                  alignment: const Alignment(0, 0.6),
                   child: Image.asset('assets/images/logo3.png', width: 140),
                 ),
               ),

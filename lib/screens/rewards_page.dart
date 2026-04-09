@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../constants/app_colors.dart';
 import '../screens/main_screen.dart';
 
-// ===== Model =====
 class RewardItem {
   final String title;
   final int points;
@@ -39,7 +38,7 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
   final supabase = Supabase.instance.client;
   int? _expandedIndex;
   int? _pressedIndex;
-  late int _currentPoints; 
+  late int _currentPoints;
   bool _isLoading = true;
 
   final List<RewardItem> _rewards = const [
@@ -47,24 +46,28 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
       title: 'AT 1 HOUR',
       points: 1000,
       description: 'You can redeem your AT by using 1000 pts.',
-      descriptionTh: 'สามารถแลกชั่วโมง AT ได้จาก 1000 pts และได้จำกัดแค่ 1 ครั้ง',
-      titleColor: Color(0xFF151B25), 
-      pointsColor: Color(0xFF151B25), 
+      descriptionTh:
+          'สามารถแลกชั่วโมง AT ได้จาก 1000 pts และได้จำกัดแค่ 1 ครั้ง',
+      titleColor: Color(0xFF151B25),
+      pointsColor: Color(0xFF151B25),
     ),
     RewardItem(
       title: 'AT 3 HOUR',
       points: 3000,
       description: 'You can redeem your AT by using 3000 pts.',
-      descriptionTh: 'สามารถแลกชั่วโมง AT ได้จาก 3000 pts และได้จำกัดแค่ 1 ครั้ง',
-      titleColor: Color(0xFF00C2A8), 
+      descriptionTh:
+          'สามารถแลกชั่วโมง AT ได้จาก 3000 pts และได้จำกัดแค่ 1 ครั้ง',
+      titleColor: Color(0xFF00C2A8),
       pointsColor: Color(0xFF00C2A8),
     ),
     RewardItem(
       title: 'SPECIAL TITLES',
       points: 10000,
-      description: 'Unlock this special title to display under your name. Show everyone your dedication!',
-      descriptionTh: 'ปลดล็อคยศพิเศษใต้ชื่อของคุณ ให้ทุกคนได้เห็นถึงความทุ่มเทของคุณ!',
-      titleColor: Color(0xFFFFA726), 
+      description:
+          'Unlock this special title to display under your name. Show everyone your dedication!',
+      descriptionTh:
+          'ปลดล็อคยศพิเศษใต้ชื่อของคุณ ให้ทุกคนได้เห็นถึงความทุ่มเทของคุณ!',
+      titleColor: Color(0xFFFFA726),
       pointsColor: Color(0xFFFFA726),
       previewText: '( Legendary Healthy )',
       previewTextColor: Color(0xFFFFA726),
@@ -82,7 +85,11 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
     try {
       final user = supabase.auth.currentUser;
       if (user == null) return;
-      final data = await supabase.from('users').select('points').eq('user_id', user.id).single();
+      final data = await supabase
+          .from('users')
+          .select('points')
+          .eq('user_id', user.id)
+          .single();
       if (mounted) {
         setState(() {
           _currentPoints = data['points'] ?? 0;
@@ -94,7 +101,7 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
     }
   }
 
-  // ✅ ฟังก์ชันเช็คสิทธิ์ (ห้ามแลกซ้ำภายใน 60 วัน)
+  // ฟังก์ชันเช็คสิทธิ์ (ห้ามแลกซ้ำภายใน 60 วัน)
   Future<bool> _checkRedeemEligibility(String rewardTitle) async {
     final user = supabase.auth.currentUser;
     if (user == null) return false;
@@ -128,7 +135,11 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
   Future<void> _onPurchase(RewardItem reward) async {
     // 1. เช็คแต้มเบื้องต้น
     if (_currentPoints < reward.points) {
-      _showErrorDialog(reward, "Not enough points", "You only have $_currentPoints pts.");
+      _showErrorDialog(
+        reward,
+        "Not enough points",
+        "You only have $_currentPoints pts.",
+      );
       return;
     }
 
@@ -138,13 +149,17 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
     setState(() => _isLoading = false);
 
     if (!canRedeem) {
-      _showErrorDialog(reward, "Limit Reached", "You can only redeem this every 2 months.");
+      _showErrorDialog(
+        reward,
+        "Limit Reached",
+        "You can only redeem this every 2 months.",
+      );
       return;
     }
 
     // 3. ยืนยันการแลก
     final bool? confirm = await _showConfirmDialog(reward);
-    
+
     if (confirm == true) {
       try {
         final user = supabase.auth.currentUser;
@@ -171,10 +186,18 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('"${reward.title}" redeemed successfully!', style: const TextStyle(fontFamily: 'Poppins-Medium', color: Colors.white)),
+            content: Text(
+              '"${reward.title}" redeemed successfully!',
+              style: const TextStyle(
+                fontFamily: 'Poppins-Medium',
+                color: Colors.white,
+              ),
+            ),
             backgroundColor: reward.titleColor,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       } catch (e) {
@@ -189,12 +212,24 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
       builder: (_) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(title, style: const TextStyle(fontFamily: 'Poppins-Medium', fontWeight: FontWeight.bold)),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontFamily: 'Poppins-Medium',
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Text(content, style: const TextStyle(fontFamily: 'Poppins')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('OK', style: TextStyle(color: reward.titleColor, fontWeight: FontWeight.bold)),
+            child: Text(
+              'OK',
+              style: TextStyle(
+                color: reward.titleColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -207,12 +242,29 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
       builder: (_) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Redeem "${reward.title}"?', style: const TextStyle(fontFamily: 'Poppins-Medium', fontWeight: FontWeight.bold)),
-        content: Text('This will use ${reward.points} pts from your balance.', style: const TextStyle(fontFamily: 'Poppins')),
+        title: Text(
+          'Redeem "${reward.title}"?',
+          style: const TextStyle(
+            fontFamily: 'Poppins-Medium',
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          'This will use ${reward.points} pts from your balance.',
+          style: const TextStyle(fontFamily: 'Poppins'),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: reward.titleColor, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: reward.titleColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Confirm', style: TextStyle(color: Colors.white)),
           ),
@@ -228,31 +280,37 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
       extendBody: true,
       body: SafeArea(
         bottom: false,
-        child: _isLoading 
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF2D7D9A)))
-          : SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            children: [
-              const SizedBox(height: 10),
-              _buildHeader(context),
-              const SizedBox(height: 20),
-              _buildPointsCardDesign(), 
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 25),
+        child: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(color: Color(0xFF2D7D9A)),
+              )
+            : SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 child: Column(
-                  children: List.generate(_rewards.length, (index) {
-                    final reward = _rewards[index];
-                    final isExpanded = _expandedIndex == index;
-                    return _buildGlassRewardCard(reward, index, isExpanded);
-                  }),
+                  children: [
+                    const SizedBox(height: 10),
+                    _buildHeader(context),
+                    const SizedBox(height: 20),
+                    _buildPointsCardDesign(),
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 25),
+                      child: Column(
+                        children: List.generate(_rewards.length, (index) {
+                          final reward = _rewards[index];
+                          final isExpanded = _expandedIndex == index;
+                          return _buildGlassRewardCard(
+                            reward,
+                            index,
+                            isExpanded,
+                          );
+                        }),
+                      ),
+                    ),
+                    const SizedBox(height: 120),
+                  ],
                 ),
               ),
-              const SizedBox(height: 120),
-            ],
-          ),
-        ),
       ),
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
@@ -269,15 +327,36 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: const Row(
                 children: [
-                  Icon(Icons.arrow_back_ios_new, size: 14, color: AppColors.greyText),
+                  Icon(
+                    Icons.arrow_back_ios_new,
+                    size: 14,
+                    color: AppColors.greyText,
+                  ),
                   SizedBox(width: 5),
-                  Text("Back", style: TextStyle(color: AppColors.greyText, fontFamily: 'Poppins-Medium')),
+                  Text(
+                    "Back",
+                    style: TextStyle(
+                      color: AppColors.greyText,
+                      fontFamily: 'Poppins-Medium',
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
-          const Expanded(child: Center(child: Text("Rewards", style: TextStyle(fontSize: 20, fontFamily: 'Poppins-Medium', color: AppColors.greyText)))),
-          const SizedBox(width: 60), 
+          const Expanded(
+            child: Center(
+              child: Text(
+                "Rewards",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontFamily: 'Poppins-Medium',
+                  color: AppColors.greyText,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 60),
         ],
       ),
     );
@@ -289,7 +368,13 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(25),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 5))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(25),
@@ -298,21 +383,45 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              decoration: const BoxDecoration(gradient: AppColors.primaryBlueGradient),
+              decoration: const BoxDecoration(
+                gradient: AppColors.primaryBlueGradient,
+              ),
               child: const Row(
                 children: [
-                  Icon(Icons.star_rounded, color: AppColors.lightText, size: 28),
+                  Icon(
+                    Icons.star_rounded,
+                    color: AppColors.lightText,
+                    size: 28,
+                  ),
                   SizedBox(width: 10),
-                  Text('Total Points', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.lightText, fontFamily: 'Poppins-Medium')),
+                  Text(
+                    'Total Points',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.lightText,
+                      fontFamily: 'Poppins-Medium',
+                    ),
+                  ),
                 ],
               ),
             ),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 30),
-              decoration: const BoxDecoration(gradient: AppColors.primaryOrangeGradient),
+              decoration: const BoxDecoration(
+                gradient: AppColors.primaryOrangeGradient,
+              ),
               child: Center(
-                child: Text('$_currentPoints Pts', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppColors.lightText, fontFamily: 'Poppins-Medium')),
+                child: Text(
+                  '$_currentPoints Pts',
+                  style: const TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.lightText,
+                    fontFamily: 'Poppins-Medium',
+                  ),
+                ),
               ),
             ),
           ],
@@ -337,7 +446,13 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.6),
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 8))],
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20),
@@ -345,36 +460,101 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: Container(
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Colors.white.withOpacity(0.4), Colors.white.withOpacity(0.1)]),
-                  border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.0),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withOpacity(0.4),
+                      Colors.white.withOpacity(0.1),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1.0,
+                  ),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(25),
                   child: Column(
                     children: [
-                      Text(reward.title, textAlign: TextAlign.center, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: reward.titleColor, fontFamily: 'Poppins-Medium')),
+                      Text(
+                        reward.title,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w900,
+                          color: reward.titleColor,
+                          fontFamily: 'Poppins-Medium',
+                        ),
+                      ),
                       if (isExpanded) ...[
                         const SizedBox(height: 20),
-                        Text(reward.description, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'Poppins')),
-                        Text(reward.descriptionTh, style: const TextStyle(color: AppColors.greyText, fontSize: 13, fontFamily: 'Poppins')),
+                        Text(
+                          reward.description,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                        Text(
+                          reward.descriptionTh,
+                          style: const TextStyle(
+                            color: AppColors.greyText,
+                            fontSize: 13,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
                         if (reward.previewText != null) ...[
                           const SizedBox(height: 15),
-                          Text(reward.previewText!, style: TextStyle(color: reward.previewTextColor, fontWeight: FontWeight.bold, fontSize: 16)),
+                          Text(
+                            reward.previewText!,
+                            style: TextStyle(
+                              color: reward.previewTextColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
                         ],
                         const SizedBox(height: 25),
                         SizedBox(
-                          width: double.infinity, height: 50,
+                          width: double.infinity,
+                          height: 50,
                           child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(backgroundColor: reward.titleColor, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: reward.titleColor,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
                             onPressed: () => _onPurchase(reward),
-                            child: const Text('Redeem Now', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Poppins-Medium')),
+                            child: const Text(
+                              'Redeem Now',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Poppins-Medium',
+                              ),
+                            ),
                           ),
                         ),
                       ],
                       if (!isExpanded) ...[
                         const SizedBox(height: 15),
-                        Align(alignment: Alignment.centerRight, child: Text('${reward.points} pts', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: reward.pointsColor, fontFamily: 'Poppins-Medium'))),
-                      ]
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            '${reward.points} pts',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: reward.pointsColor,
+                              fontFamily: 'Poppins-Medium',
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -391,8 +571,17 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
       height: 100,
       decoration: BoxDecoration(
         color: AppColors.lightText,
-        borderRadius: const BorderRadius.only(topLeft: Radius.circular(35), topRight: Radius.circular(35)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5))],
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(35),
+          topRight: Radius.circular(35),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -414,9 +603,21 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Image.asset(iconPath, width: 28, height: 28, color: AppColors.greyText),
+          Image.asset(
+            iconPath,
+            width: 28,
+            height: 28,
+            color: AppColors.greyText,
+          ),
           const SizedBox(height: 4),
-          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.greyText, fontFamily: 'Poppins')),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.greyText,
+              fontFamily: 'Poppins',
+            ),
+          ),
         ],
       ),
     );
@@ -424,8 +625,21 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
 
   Widget _buildAddButton() {
     return Container(
-      width: 60, height: 60,
-      decoration: BoxDecoration(shape: BoxShape.circle, gradient: AppColors.primaryOrangeGradient, boxShadow: [BoxShadow(color: AppColors.primaryOrangeGradient.colors.first.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))]),
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: AppColors.primaryOrangeGradient,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryOrangeGradient.colors.first.withOpacity(
+              0.3,
+            ),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: const Icon(Icons.add, color: Colors.white, size: 35),
     );
   }

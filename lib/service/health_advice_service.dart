@@ -7,8 +7,8 @@ class HealthAdviceService {
 
   static Future<void> checkAndShowAdvice(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
-    
-    // 1. เช็คก่อนว่าผู้ใช้เปิดหรือปิดรับคำแนะนำ (Default เป็น true)
+
+    // 1. เช็คว่าผู้ใช้เปิดหรือปิดรับคำแนะนำ (Default เป็น true)
     bool isEnabled = prefs.getBool('health_advice_enabled') ?? true;
     if (!isEnabled) return; // ถ้าปิดอยู่ ให้หยุดทำงานทันที
 
@@ -18,8 +18,9 @@ class HealthAdviceService {
     // 2. เช็คว่าวันนี้แสดงไปหรือยัง
     if (lastDate != today) {
       try {
-        // ดึงคำแนะนำแบบสุ่มจากตารางที่เราสร้างไว้
-        final List<dynamic> data = await supabase.from('health_tips').select('message');
+        final List<dynamic> data = await supabase
+            .from('health_tips')
+            .select('message');
 
         if (data.isNotEmpty) {
           data.shuffle();
@@ -28,7 +29,7 @@ class HealthAdviceService {
           // 3. บันทึกลงตาราง Notifications ใน Database
           await _saveToNotification(randomTip);
 
-          // 4. แสดง Pop-up (Dialog) และ Snackbar แจ้งเตือน
+          // 4. แสดง Pop-up และ Snackbar แจ้งเตือน
           if (context.mounted) {
             _showAdviceDialog(context, randomTip);
           }
@@ -52,7 +53,7 @@ class HealthAdviceService {
     });
   }
 
-  // ฟังก์ชันแสดง Pop-up (Dialog)
+  // ฟังก์ชันแสดง Pop-up
   static void _showAdviceDialog(BuildContext context, String msg) {
     showDialog(
       context: context,
@@ -62,14 +63,23 @@ class HealthAdviceService {
           children: [
             Icon(Icons.lightbulb, color: Colors.orange),
             SizedBox(width: 10),
-            Text("เคล็ดลับวันนี้", style: TextStyle(fontFamily: 'Poppins-Medium')),
+            Text(
+              "เคล็ดลับวันนี้",
+              style: TextStyle(fontFamily: 'Poppins-Medium'),
+            ),
           ],
         ),
-        content: Text(msg, style: const TextStyle(fontSize: 16, fontFamily: 'Poppins')),
+        content: Text(
+          msg,
+          style: const TextStyle(fontSize: 16, fontFamily: 'Poppins'),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("รับทราบ", style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              "รับทราบ",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),

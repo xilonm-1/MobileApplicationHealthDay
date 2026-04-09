@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
@@ -11,12 +10,14 @@ class SignUpScreen extends StatefulWidget {
   State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMixin {
+class _SignUpScreenState extends State<SignUpScreen>
+    with TickerProviderStateMixin {
   final supabase = Supabase.instance.client;
 
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   final TextEditingController _firstnameController = TextEditingController();
   final TextEditingController _lastnameController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
@@ -36,7 +37,10 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
       vsync: this,
     );
     _signInScaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _signInAnimationController, curve: Curves.easeInOut),
+      CurvedAnimation(
+        parent: _signInAnimationController,
+        curve: Curves.easeInOut,
+      ),
     );
   }
 
@@ -53,9 +57,6 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
     super.dispose();
   }
 
-  // ==========================================
-  // LOGIC
-  // ==========================================
   void _onSignUpPressed() async {
     if (_isAnyFieldEmpty()) {
       _showSnackBar('กรุณากรอกข้อมูลให้ครบทุกช่อง', isError: true);
@@ -105,7 +106,7 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
 
         if (!mounted) return;
         _showSnackBar('สมัครสมาชิกสำเร็จ! ✨', isError: false);
-        Navigator.of(context).pop(); 
+        Navigator.of(context).pop();
       }
     } on AuthException catch (e) {
       _showSnackBar(e.message, isError: true);
@@ -142,9 +143,6 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
     });
   }
 
-  // ==========================================
-  // BUILD
-  // ==========================================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -152,14 +150,10 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
       body: SafeArea(
         child: Column(
           children: [
-            // ส่วนที่ 1: Header (ดันขึ้นไปด้านบนสุด)
-            Expanded(
-              child: SingleChildScrollView(
-                child: _buildHeader(),
-              ),
-            ),
-            
-            // ส่วนที่ 2: ฟอร์มสมัครสมาชิก (วางไว้ล่างสุด)
+            // ส่วนที่ 1: Header
+            Expanded(child: SingleChildScrollView(child: _buildHeader())),
+
+            // ส่วนที่ 2: ฟอร์มสมัครสมาชิก
             _buildSignUpForm(),
           ],
         ),
@@ -190,8 +184,11 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
             'assets/images/Full_logo.png',
             width: 200,
             fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) =>
-                const Icon(Icons.health_and_safety, size: 80, color: Color(0xFF2D7D9A)),
+            errorBuilder: (context, error, stackTrace) => const Icon(
+              Icons.health_and_safety,
+              size: 80,
+              color: Color(0xFF2D7D9A),
+            ),
           ),
         ],
       ),
@@ -226,7 +223,8 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
             hint: 'password',
             obscure: _obscurePassword,
             hasToggle: true,
-            onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
+            onToggle: () =>
+                setState(() => _obscurePassword = !_obscurePassword),
           ),
           const SizedBox(height: 12),
           _buildTextField(
@@ -234,7 +232,9 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
             hint: 'confirm password',
             obscure: _obscureConfirmPassword,
             hasToggle: true,
-            onToggle: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+            onToggle: () => setState(
+              () => _obscureConfirmPassword = !_obscureConfirmPassword,
+            ),
           ),
           const SizedBox(height: 12),
           _buildTextField(controller: _firstnameController, hint: 'firstname'),
@@ -283,7 +283,7 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
               color: Colors.black.withOpacity(0.1),
               blurRadius: 10,
               offset: const Offset(0, 5),
-            )
+            ),
           ],
         ),
         child: Center(
@@ -291,7 +291,10 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
               ? const SizedBox(
                   width: 24,
                   height: 24,
-                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
                 )
               : const Text(
                   'Register',
@@ -355,16 +358,28 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
         controller: controller,
         obscureText: obscure,
         keyboardType: keyboardType,
-        style: const TextStyle(color: AppColors.darkText, fontFamily: 'Poppins'),
+        style: const TextStyle(
+          color: AppColors.darkText,
+          fontFamily: 'Poppins',
+        ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(color: Colors.grey, fontSize: 14, fontFamily: 'Poppins'),
+          hintStyle: const TextStyle(
+            color: Colors.grey,
+            fontSize: 14,
+            fontFamily: 'Poppins',
+          ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 15,
+          ),
           suffixIcon: hasToggle
               ? IconButton(
                   icon: Icon(
-                    obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    obscure
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
                     color: Colors.grey,
                     size: 20,
                   ),

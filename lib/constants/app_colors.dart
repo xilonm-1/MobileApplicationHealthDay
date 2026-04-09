@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // --- 1. สีพื้นหลังหลัก (Solid Color) ---
+  // 1. สีพื้นหลังหลัก (Solid Color)
   static const Color backgroundColor = Color(0xFFF5F7F8);
   
-  // --- 2. สีข้อความหลัก (Solid Color - ดึงจากจุดสิ้นสุดของ gradient ฟ้า) ---
+  // 2. สีข้อความหลัก (Solid Color - ดึงจากจุดสิ้นสุดของ gradient ฟ้า)
   static const Color darkText = Color(0xFF0F2A34);
   static const Color lightText = Colors.white;
   static const Color greyText = Color(0x80000000);
 
-  // --- 3. ชุดสีไล่เฉดหลัก (Main Gradients) ---
+  // 3. ชุดสีไล่เฉดหลัก (Main Gradients)
   
   // สีฟ้าหลัก / สีน้ำเงินเข้ม (Primary Blue)
   static const LinearGradient primaryBlueGradient = LinearGradient(
@@ -25,7 +25,7 @@ class AppColors {
     colors: [Color(0xFFFFB347), Color(0xFFFF9600)],
   );
 
-  // --- 4. ชุดสีไล่เฉดสถานะ (Status Gradients) ---
+  // 4. ชุดสีไล่เฉดสถานะ (Status Gradients)
 
   // สีเขียว Steps
   static const LinearGradient stepsGradient = LinearGradient(
@@ -62,8 +62,7 @@ class AppColors {
     colors: [Color(0xFFFF6B6B), Color(0xFFFF0000)],
   );
   
-  // --- 5. การตั้งค่า Glassmorphism (White Transparent) ---
-  // ใช้สีขาวที่มีความโปร่งใส (Opacity) ต่างกันเพื่อทำเอฟเฟกต์กระจก
+  // 5. การตั้งค่า Glassmorphism (White Transparent) 
   static Color glassColor = Colors.white.withOpacity(0.3); // สีพื้นหลังกระจก
   static Color glassBorderColor = Colors.white.withOpacity(0.2); // สีขอบกระจก
 }
