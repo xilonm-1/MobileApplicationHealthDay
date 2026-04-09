@@ -11,16 +11,16 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen>
+    with TickerProviderStateMixin {
   final supabase = Supabase.instance.client;
 
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  
+
   bool _obscurePassword = true;
   bool _isLoading = false;
 
-  // Animation สำหรับปุ่มเปลี่ยนหน้า (Sign Up)
   late AnimationController _signUpAnimationController;
   late Animation<double> _signUpScaleAnimation;
 
@@ -32,7 +32,10 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       vsync: this,
     );
     _signUpScaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _signUpAnimationController, curve: Curves.easeInOut),
+      CurvedAnimation(
+        parent: _signUpAnimationController,
+        curve: Curves.easeInOut,
+      ),
     );
   }
 
@@ -44,9 +47,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     super.dispose();
   }
 
-  // ==========================================
-  // LOGIC
-  // ==========================================
   void _onLoginPressed() async {
     final username = _usernameController.text.trim();
     final password = _passwordController.text.trim();
@@ -59,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     setState(() => _isLoading = true);
 
     try {
-      final String internalEmail = "$username@healthday.app"; 
+      final String internalEmail = "$username@healthday.app";
 
       final response = await supabase.auth.signInWithPassword(
         email: internalEmail,
@@ -94,14 +94,14 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
   void _navigateToSignUp() {
     _signUpAnimationController.forward().then((_) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => const SignUpScreen()));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const SignUpScreen()),
+      );
       _signUpAnimationController.reverse();
     });
   }
 
-  // ==========================================
-  // BUILD
-  // ==========================================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -111,10 +111,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         child: Column(
           children: [
             // ส่วนที่ 1: Header (ดันขึ้นไปด้านบนสุดด้วย Expanded)
-            Expanded(
-              child: _buildHeader(),
-            ),
-            
+            Expanded(child: _buildHeader()),
+
             // ส่วนที่ 2: ฟอร์ม Login (ติดขอบล่าง)
             _buildLoginForm(),
           ],
@@ -122,10 +120,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       ),
     );
   }
-
-  // ==========================================
-  // UI COMPONENTS
-  // ==========================================
 
   Widget _buildHeader() {
     return Container(
@@ -150,8 +144,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
               'assets/images/Full_logo.png',
               width: 230,
               fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.health_and_safety, size: 80, color: Color(0xFF2D7D9A)),
+              errorBuilder: (context, error, stackTrace) => const Icon(
+                Icons.health_and_safety,
+                size: 80,
+                color: Color(0xFF2D7D9A),
+              ),
             ),
           ],
         ),
@@ -187,7 +184,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             hint: 'password',
             obscure: _obscurePassword,
             hasToggle: true,
-            onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
+            onToggle: () =>
+                setState(() => _obscurePassword = !_obscurePassword),
           ),
           const SizedBox(height: 35),
           _buildLoginButton(),
@@ -212,7 +210,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
               color: Colors.black.withOpacity(0.1),
               blurRadius: 10,
               offset: const Offset(0, 5),
-            )
+            ),
           ],
         ),
         child: Center(
@@ -220,7 +218,10 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
               ? const SizedBox(
                   width: 24,
                   height: 24,
-                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
                 )
               : const Text(
                   'Login',
@@ -282,16 +283,28 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       child: TextField(
         controller: controller,
         obscureText: obscure,
-        style: const TextStyle(color: AppColors.darkText, fontFamily: 'Poppins'),
+        style: const TextStyle(
+          color: AppColors.darkText,
+          fontFamily: 'Poppins',
+        ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(color: Colors.grey, fontSize: 14, fontFamily: 'Poppins'),
+          hintStyle: const TextStyle(
+            color: Colors.grey,
+            fontSize: 14,
+            fontFamily: 'Poppins',
+          ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 15,
+          ),
           suffixIcon: hasToggle
               ? IconButton(
                   icon: Icon(
-                    obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    obscure
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
                     color: Colors.grey,
                     size: 20,
                   ),

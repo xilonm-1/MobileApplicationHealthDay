@@ -12,8 +12,6 @@ class NotificationPage extends StatefulWidget {
 
 class _NotificationPageState extends State<NotificationPage> {
   final supabase = Supabase.instance.client;
-  
-  // เปลี่ยนมารับข้อมูล Dynamic จาก Database
   List<Map<String, dynamic>> _notifications = [];
   bool _isLoading = true;
 
@@ -33,8 +31,7 @@ class _NotificationPageState extends State<NotificationPage> {
           .from('notifications')
           .select()
           .eq('user_id', user.id)
-          .order('created_at', ascending: false); // เรียงจากใหม่ไปเก่า
-
+          .order('created_at', ascending: false);
       if (mounted) {
         setState(() {
           _notifications = List<Map<String, dynamic>>.from(data);
@@ -50,9 +47,7 @@ class _NotificationPageState extends State<NotificationPage> {
   // 2. ฟังก์ชันปัดลบทีละอัน
   Future<void> _deleteNotification(dynamic id, int index) async {
     try {
-      // เอาออกจากหน้าจอก่อนเพื่อความสมูท
       setState(() => _notifications.removeAt(index));
-      // ลบจากฐานข้อมูลจริงๆ
       await supabase.from('notifications').delete().eq('notification_id', id);
     } catch (e) {
       debugPrint('Error deleting notification: $e');
@@ -82,23 +77,26 @@ class _NotificationPageState extends State<NotificationPage> {
             const SizedBox(height: 10),
             _buildHeader(context),
             const SizedBox(height: 10),
-            
-            // แสดงปุ่ม Clear All ก็ต่อเมื่อมี Notification
-            if (_notifications.isNotEmpty) _buildClearButton(), 
+
+            if (_notifications.isNotEmpty) _buildClearButton(),
 
             Expanded(
               child: _isLoading
-                  ? Center(child: CircularProgressIndicator(color: AppColors.primaryOrangeGradient.colors.first))
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primaryOrangeGradient.colors.first,
+                      ),
+                    )
                   : _notifications.isEmpty
-                      ? _buildEmptyState()
-                      : ListView.builder(
-                          padding: const EdgeInsets.only(top: 5, bottom: 100),
-                          itemCount: _notifications.length,
-                          itemBuilder: (context, index) {
-                            final item = _notifications[index];
-                            return _buildDismissibleItem(item, index);
-                          },
-                        ),
+                  ? _buildEmptyState()
+                  : ListView.builder(
+                      padding: const EdgeInsets.only(top: 5, bottom: 100),
+                      itemCount: _notifications.length,
+                      itemBuilder: (context, index) {
+                        final item = _notifications[index];
+                        return _buildDismissibleItem(item, index);
+                      },
+                    ),
             ),
           ],
         ),
@@ -106,7 +104,6 @@ class _NotificationPageState extends State<NotificationPage> {
     );
   }
 
-  // MAIN COMPONENTS
   Widget _buildHeader(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -118,19 +115,36 @@ class _NotificationPageState extends State<NotificationPage> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: const Row(
                 children: [
-                  Icon(Icons.arrow_back_ios_new, size: 14, color: AppColors.greyText),
+                  Icon(
+                    Icons.arrow_back_ios_new,
+                    size: 14,
+                    color: AppColors.greyText,
+                  ),
                   SizedBox(width: 5),
-                  Text("Back", style: TextStyle(color: AppColors.greyText, fontFamily: 'Poppins-Medium')),
+                  Text(
+                    "Back",
+                    style: TextStyle(
+                      color: AppColors.greyText,
+                      fontFamily: 'Poppins-Medium',
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
           const Expanded(
             child: Center(
-              child: Text("Notifications", style: TextStyle(fontSize: 20, fontFamily: 'Poppins-Medium', color: AppColors.greyText)),
+              child: Text(
+                "Notifications",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontFamily: 'Poppins-Medium',
+                  color: AppColors.greyText,
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: 60), 
+          const SizedBox(width: 60),
         ],
       ),
     );
@@ -149,12 +163,20 @@ class _NotificationPageState extends State<NotificationPage> {
               gradient: AppColors.deleteGradient,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
-                BoxShadow(color: AppColors.deleteGradient.colors.last.withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 3)),
+                BoxShadow(
+                  color: AppColors.deleteGradient.colors.last.withOpacity(0.3),
+                  blurRadius: 6,
+                  offset: const Offset(0, 3),
+                ),
               ],
             ),
             child: const Text(
               "Clear All",
-              style: TextStyle(color: Colors.white, fontSize: 13, fontFamily: 'Poppins-Medium'),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontFamily: 'Poppins-Medium',
+              ),
             ),
           ),
         ),
@@ -164,16 +186,19 @@ class _NotificationPageState extends State<NotificationPage> {
 
   Widget _buildDismissibleItem(Map<String, dynamic> item, int index) {
     return Dismissible(
-      key: Key(item['notification_id'].toString()), // ใช้ ID จาก Database เป็น Key
-      direction: DismissDirection.endToStart, 
-      onDismissed: (direction) => _deleteNotification(item['notification_id'], index), // สั่งลบ
+      key: Key(
+        item['notification_id'].toString(),
+      ), // ใช้ ID จาก Database เป็น Key
+      direction: DismissDirection.endToStart,
+      onDismissed: (direction) =>
+          _deleteNotification(item['notification_id'], index), // สั่งลบ
       background: Container(
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         padding: const EdgeInsets.only(right: 25),
         alignment: Alignment.centerRight,
         decoration: BoxDecoration(
           gradient: AppColors.deleteGradient,
-          borderRadius: BorderRadius.circular(15), 
+          borderRadius: BorderRadius.circular(15),
         ),
         child: const Icon(Icons.delete_outline, color: Colors.white, size: 30),
       ),
@@ -184,7 +209,8 @@ class _NotificationPageState extends State<NotificationPage> {
   Widget _buildNotificationCard(Map<String, dynamic> item) {
     // จัด Format เวลาที่ดึงมาจากฐานข้อมูล
     DateTime createdAt = DateTime.parse(item['created_at']).toLocal();
-    String formattedTime = "${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')} - ${createdAt.day.toString().padLeft(2, '0')}/${createdAt.month.toString().padLeft(2, '0')}/${createdAt.year}";
+    String formattedTime =
+        "${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')} - ${createdAt.day.toString().padLeft(2, '0')}/${createdAt.month.toString().padLeft(2, '0')}/${createdAt.year}";
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -193,7 +219,11 @@ class _NotificationPageState extends State<NotificationPage> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Row(
@@ -202,10 +232,14 @@ class _NotificationPageState extends State<NotificationPage> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: const BoxDecoration(
-              gradient: AppColors.primaryBlueGradient, 
+              gradient: AppColors.primaryBlueGradient,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.notifications_active_rounded, color: Colors.white, size: 20),
+            child: const Icon(
+              Icons.notifications_active_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 15),
           Expanded(
@@ -213,13 +247,21 @@ class _NotificationPageState extends State<NotificationPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item['message'] ?? '', // ดึงข้อความจาก Database
-                  style: const TextStyle(fontFamily: 'Poppins-Medium', fontSize: 15, color: AppColors.darkText),
+                  item['message'] ?? '',
+                  style: const TextStyle(
+                    fontFamily: 'Poppins-Medium',
+                    fontSize: 15,
+                    color: AppColors.darkText,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  formattedTime, // แสดงเวลาที่แปลงแล้ว
-                  style: const TextStyle(fontFamily: 'Poppins-Medium', color: AppColors.greyText, fontSize: 12),
+                  formattedTime,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins-Medium',
+                    color: AppColors.greyText,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
@@ -238,7 +280,11 @@ class _NotificationPageState extends State<NotificationPage> {
           SizedBox(height: 10),
           Text(
             "No notifications",
-            style: TextStyle(fontFamily: 'Poppins-Medium', color: AppColors.greyText, fontSize: 16),
+            style: TextStyle(
+              fontFamily: 'Poppins-Medium',
+              color: AppColors.greyText,
+              fontSize: 16,
+            ),
           ),
         ],
       ),

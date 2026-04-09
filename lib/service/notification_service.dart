@@ -6,37 +6,44 @@ class NotificationService {
   static final _notifications = FlutterLocalNotificationsPlugin();
 
   static Future<void> init() async {
-    tz.initializeTimeZones(); // สำคัญมากสำหรับการตั้งเวลา
+    tz.initializeTimeZones();
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings();
-    await _notifications.initialize(const InitializationSettings(android: android, iOS: ios));
+    await _notifications.initialize(
+      const InitializationSettings(android: android, iOS: ios),
+    );
   }
 
-  // ✅ ฟังก์ชัน: ตั้งเวลาแจ้งเตือนล่วงหน้า (เช่น เตือนทุกๆ 1 ชม. ในช่วงเวลาที่กำหนด)
+  // ฟังก์ชัน: ตั้งเวลาแจ้งเตือนล่วงหน้า
   static Future<void> scheduleWaterReminders() async {
-    // ลบอันเก่าออกก่อนกันซ้ำ
     await _notifications.cancelAll();
 
     const details = NotificationDetails(
-      android: AndroidNotificationDetails('water_id', 'Water Reminder', importance: Importance.max, priority: Priority.high),
+      android: AndroidNotificationDetails(
+        'water_id',
+        'Water Reminder',
+        importance: Importance.max,
+        priority: Priority.high,
+      ),
       iOS: DarwinNotificationDetails(),
     );
 
-    // วนลูปตั้งเวลาล่วงหน้า 8 ครั้ง (เช่น ทุก 1 ชั่วโมง ตั้งแต่ตอนนี้)
+    // วนลูปตั้งเวลาล่วงหน้า 8 ครั้ง
     for (int i = 1; i <= 8; i++) {
       await _notifications.zonedSchedule(
-        i, // id ของการแจ้งเตือน
+        i,
         'ดื่มน้ำกันเถอะ! 💧',
         'อย่าลืมดื่มน้ำให้ครบตามเป้าหมายนะ',
-        tz.TZDateTime.now(tz.local).add(Duration(hours: i)), // อีก i ชั่วโมงข้างหน้า
+        tz.TZDateTime.now(tz.local).add(Duration(hours: i)),
         details,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // เตือนแม้ตอนประหยัดพลังงาน
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       );
     }
   }
 
-  // ✅ ฟังก์ชัน: ยกเลิกการเตือนทั้งหมด (ใช้ตอนกดปิดใน Setting)
+  //ฟังก์ชัน: ยกเลิกการเตือนทั้งหมด
   static Future<void> cancelAll() async {
     await _notifications.cancelAll();
   }

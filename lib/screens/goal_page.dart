@@ -46,20 +46,24 @@ class _GoalsPageState extends State<GoalsPage> {
     try {
       final user = supabase.auth.currentUser;
       if (user != null) {
-        final data = await supabase.from('user_goals').select().eq('user_id', user.id).maybeSingle();
-        
+        final data = await supabase
+            .from('user_goals')
+            .select()
+            .eq('user_id', user.id)
+            .maybeSingle();
+
         if (data != null && mounted) {
-          // ✅ เช็ควันที่อัปเดตล่าสุด
           DateTime? updatedAt;
           if (data['updated_at'] != null) {
             updatedAt = DateTime.parse(data['updated_at']).toLocal();
           }
-          
+
           DateTime today = DateTime.now();
-          bool isToday = updatedAt != null && 
-                         updatedAt.year == today.year && 
-                         updatedAt.month == today.month && 
-                         updatedAt.day == today.day;
+          bool isToday =
+              updatedAt != null &&
+              updatedAt.year == today.year &&
+              updatedAt.month == today.month &&
+              updatedAt.day == today.day;
 
           setState(() {
             if (isToday) {
@@ -73,7 +77,7 @@ class _GoalsPageState extends State<GoalsPage> {
               _waterGoal = 8;
               _sleepGoal = 8;
             }
-            
+
             _stepsController.text = "$_stepsGoal";
             _waterController.text = "$_waterGoal";
             _sleepController.text = "$_sleepGoal";
@@ -110,20 +114,31 @@ class _GoalsPageState extends State<GoalsPage> {
     try {
       final user = supabase.auth.currentUser;
       if (user == null) throw Exception("User not logged in");
-      
+
       await supabase.from('user_goals').upsert({
         'user_id': user.id,
         'target_steps': finalSteps,
         'target_water': finalWater,
         'target_sleep': finalSleep,
-        'updated_at': DateTime.now().toIso8601String(), // ✅ บังคับอัปเดตเวลาเสมอตอนกดเซฟ
+        'updated_at': DateTime.now()
+            .toIso8601String(), // ✅ บังคับอัปเดตเวลาเสมอตอนกดเซฟ
       }, onConflict: 'user_id');
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Goals updated successfully! 🎯', style: TextStyle(fontFamily: 'Poppins-Medium')), backgroundColor: Color(0xFF2D7D9A)),
+        const SnackBar(
+          content: Text(
+            'Goals updated successfully! 🎯',
+            style: TextStyle(fontFamily: 'Poppins-Medium'),
+          ),
+          backgroundColor: Color(0xFF2D7D9A),
+        ),
       );
-      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const MainScreen()), (route) => false);
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const MainScreen()),
+        (route) => false,
+      );
     } catch (e) {
       debugPrint("Error saving goals: $e");
     }
@@ -139,56 +154,62 @@ class _GoalsPageState extends State<GoalsPage> {
           children: [
             _buildBackgroundOrbs(),
             SafeArea(
-              child: _isLoading 
-                ? Center(child: CircularProgressIndicator(color: AppColors.primaryOrangeGradient.colors.first))
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.only(bottom: 50),
-                    child: Column(
-                      children: [
-                        _buildHeader(context),
-                        const SizedBox(height: 20),
-                        _buildQuote(),
-                        const SizedBox(height: 25),
-                        _buildGoalCard(
-                          title: "Activity",
-                          iconPath: 'assets/icons/activity2_icon.png',
-                          fallbackIcon: Icons.directions_walk_rounded,
-                          iconGradient: AppColors.stepsGradient,
-                          controller: _stepsController,
-                          unit: "steps",
-                          recommendedText: "(Recommended: 8,000 - 10,000 steps)",
-                          onDecrease: () => _updateValue('steps', -1),
-                          onIncrease: () => _updateValue('steps', 1),
-                        ),
-                        const SizedBox(height: 20),
-                        _buildGoalCard(
-                          title: "Water",
-                          iconPath: 'assets/icons/water2_icon.png',
-                          fallbackIcon: Icons.water_drop_rounded,
-                          iconGradient: AppColors.waterGradient,
-                          controller: _waterController,
-                          unit: "glasses",
-                          recommendedText: "(Recommended: 8-10 glasses or 2 liters)",
-                          onDecrease: () => _updateValue('water', -1),
-                          onIncrease: () => _updateValue('water', 1),
-                        ),
-                        const SizedBox(height: 20),
-                        _buildGoalCard(
-                          title: "Sleep",
-                          iconPath: 'assets/icons/sleep2_icon.png',
-                          fallbackIcon: Icons.bedtime_rounded,
-                          iconGradient: AppColors.sleepGradient,
-                          controller: _sleepController,
-                          unit: "hours",
-                          recommendedText: "(Recommended: 7-9 hours)",
-                          onDecrease: () => _updateValue('sleep', -1),
-                          onIncrease: () => _updateValue('sleep', 1),
-                        ),
-                        const SizedBox(height: 35),
-                        _buildSaveButton(),
-                      ],
+              child: _isLoading
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primaryOrangeGradient.colors.first,
+                      ),
+                    )
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.only(bottom: 50),
+                      child: Column(
+                        children: [
+                          _buildHeader(context),
+                          const SizedBox(height: 20),
+                          _buildQuote(),
+                          const SizedBox(height: 25),
+                          _buildGoalCard(
+                            title: "Activity",
+                            iconPath: 'assets/icons/activity2_icon.png',
+                            fallbackIcon: Icons.directions_walk_rounded,
+                            iconGradient: AppColors.stepsGradient,
+                            controller: _stepsController,
+                            unit: "steps",
+                            recommendedText:
+                                "(Recommended: 8,000 - 10,000 steps)",
+                            onDecrease: () => _updateValue('steps', -1),
+                            onIncrease: () => _updateValue('steps', 1),
+                          ),
+                          const SizedBox(height: 20),
+                          _buildGoalCard(
+                            title: "Water",
+                            iconPath: 'assets/icons/water2_icon.png',
+                            fallbackIcon: Icons.water_drop_rounded,
+                            iconGradient: AppColors.waterGradient,
+                            controller: _waterController,
+                            unit: "glasses",
+                            recommendedText:
+                                "(Recommended: 8-10 glasses or 2 liters)",
+                            onDecrease: () => _updateValue('water', -1),
+                            onIncrease: () => _updateValue('water', 1),
+                          ),
+                          const SizedBox(height: 20),
+                          _buildGoalCard(
+                            title: "Sleep",
+                            iconPath: 'assets/icons/sleep2_icon.png',
+                            fallbackIcon: Icons.bedtime_rounded,
+                            iconGradient: AppColors.sleepGradient,
+                            controller: _sleepController,
+                            unit: "hours",
+                            recommendedText: "(Recommended: 7-9 hours)",
+                            onDecrease: () => _updateValue('sleep', -1),
+                            onIncrease: () => _updateValue('sleep', 1),
+                          ),
+                          const SizedBox(height: 35),
+                          _buildSaveButton(),
+                        ],
+                      ),
                     ),
-                  ),
             ),
           ],
         ),
@@ -210,20 +231,31 @@ class _GoalsPageState extends State<GoalsPage> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 25),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2), // เปลี่ยนเป็นใสเพื่อทำ Glass
+        color: Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(15),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 5))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(15),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), // Glass Texture ทับทั้งกล่อง
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Column(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 15,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
-                  gradient: AppColors.primaryOrangeGradient.scale(0.9), // ส้มเดิมที่ใสขึ้นนิดหน่อย
+                  gradient: AppColors.primaryOrangeGradient.scale(
+                    0.9,
+                  ), // ส้มเดิมที่ใสขึ้นนิดหน่อย
                 ),
                 child: Row(
                   children: [
@@ -232,18 +264,40 @@ class _GoalsPageState extends State<GoalsPage> {
                       decoration: BoxDecoration(
                         gradient: iconGradient,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white.withOpacity(0.5), width: 1.5),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.5),
+                          width: 1.5,
+                        ),
                       ),
-                      child: Image.asset(iconPath, width: 22, height: 22, color: Colors.white, errorBuilder: (c, e, s) => Icon(fallbackIcon, color: Colors.white, size: 22)),
+                      child: Image.asset(
+                        iconPath,
+                        width: 22,
+                        height: 22,
+                        color: Colors.white,
+                        errorBuilder: (c, e, s) =>
+                            Icon(fallbackIcon, color: Colors.white, size: 22),
+                      ),
                     ),
                     const SizedBox(width: 12),
-                    Text(title, style: const TextStyle(color: AppColors.darkText, fontSize: 16, fontFamily: 'Poppins-SemiBold')),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: AppColors.darkText,
+                        fontSize: 16,
+                        fontFamily: 'Poppins-SemiBold',
+                      ),
+                    ),
                   ],
                 ),
               ),
               Container(
-                color: Colors.white.withOpacity(0.4), // ส่วนสีขาวที่ใสขึ้น
-                padding: const EdgeInsets.only(top: 25, bottom: 15, left: 15, right: 15),
+                color: Colors.white.withOpacity(0.4),
+                padding: const EdgeInsets.only(
+                  top: 25,
+                  bottom: 15,
+                  left: 15,
+                  right: 15,
+                ),
                 child: Column(
                   children: [
                     Row(
@@ -255,32 +309,79 @@ class _GoalsPageState extends State<GoalsPage> {
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.7),
                             borderRadius: BorderRadius.circular(20),
-                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))],
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              IconButton(onPressed: onDecrease, icon: const Icon(Icons.remove, size: 18, color: Colors.grey)),
+                              IconButton(
+                                onPressed: onDecrease,
+                                icon: const Icon(
+                                  Icons.remove,
+                                  size: 18,
+                                  color: Colors.grey,
+                                ),
+                              ),
                               Expanded(
                                 child: TextField(
                                   controller: controller,
                                   keyboardType: TextInputType.number,
                                   textAlign: TextAlign.center,
-                                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                                  style: const TextStyle(fontSize: 18, fontFamily: 'Poppins-SemiBold', color: AppColors.darkText),
-                                  decoration: const InputDecoration(border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.zero),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontFamily: 'Poppins-SemiBold',
+                                    color: AppColors.darkText,
+                                  ),
+                                  decoration: const InputDecoration(
+                                    border: InputBorder.none,
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
                                 ),
                               ),
-                              IconButton(onPressed: onIncrease, icon: const Icon(Icons.add, size: 18, color: Colors.grey)),
+                              IconButton(
+                                onPressed: onIncrease,
+                                icon: const Icon(
+                                  Icons.add,
+                                  size: 18,
+                                  color: Colors.grey,
+                                ),
+                              ),
                             ],
                           ),
                         ),
                         const SizedBox(width: 15),
-                        SizedBox(width: 60, child: Text(unit, style: const TextStyle(color: Colors.grey, fontSize: 16, fontFamily: 'Poppins-Medium'))),
+                        SizedBox(
+                          width: 60,
+                          child: Text(
+                            unit,
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 16,
+                              fontFamily: 'Poppins-Medium',
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 20),
-                    Text(recommendedText, style: const TextStyle(color: Colors.grey, fontSize: 12, fontFamily: 'Poppins-Regular')),
+                    Text(
+                      recommendedText,
+                      style: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 12,
+                        fontFamily: 'Poppins-Regular',
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -300,17 +401,40 @@ class _GoalsPageState extends State<GoalsPage> {
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Container(
-              padding: const EdgeInsets.only(left: 20, top: 10, bottom: 10, right: 10),
+              padding: const EdgeInsets.only(
+                left: 20,
+                top: 10,
+                bottom: 10,
+                right: 10,
+              ),
               child: const Row(
                 children: [
-                  Icon(Icons.arrow_back_ios_new, size: 16, color: AppColors.greyText),
+                  Icon(
+                    Icons.arrow_back_ios_new,
+                    size: 16,
+                    color: AppColors.greyText,
+                  ),
                   SizedBox(width: 5),
-                  Text("Back", style: TextStyle(color: AppColors.greyText, fontFamily: 'Poppins-Medium', fontSize: 16)),
+                  Text(
+                    "Back",
+                    style: TextStyle(
+                      color: AppColors.greyText,
+                      fontFamily: 'Poppins-Medium',
+                      fontSize: 16,
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
-          const Text("Goals", style: TextStyle(color: AppColors.greyText, fontSize: 18, fontFamily: 'Poppins-Medium')),
+          const Text(
+            "Goals",
+            style: TextStyle(
+              color: AppColors.greyText,
+              fontSize: 18,
+              fontFamily: 'Poppins-Medium',
+            ),
+          ),
           const SizedBox(width: 60),
         ],
       ),
@@ -320,7 +444,16 @@ class _GoalsPageState extends State<GoalsPage> {
   Widget _buildQuote() {
     return const Padding(
       padding: EdgeInsets.symmetric(horizontal: 40),
-      child: Text("\"Good goals are the\nfoundation of good health.\"", textAlign: TextAlign.center, style: TextStyle(color: AppColors.darkText, fontSize: 18, fontFamily: 'Poppins-SemiBold', height: 1.4)),
+      child: Text(
+        "\"Good goals are the\nfoundation of good health.\"",
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: AppColors.darkText,
+          fontSize: 18,
+          fontFamily: 'Poppins-SemiBold',
+          height: 1.4,
+        ),
+      ),
     );
   }
 
@@ -330,12 +463,31 @@ class _GoalsPageState extends State<GoalsPage> {
       child: GestureDetector(
         onTap: _saveGoals,
         child: Container(
-          height: 55, width: double.infinity,
+          height: 55,
+          width: double.infinity,
           decoration: BoxDecoration(
-            gradient: AppColors.primaryOrangeGradient, borderRadius: BorderRadius.circular(15),
-            boxShadow: [BoxShadow(color: AppColors.primaryOrangeGradient.colors.last.withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 5))],
+            gradient: AppColors.primaryOrangeGradient,
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primaryOrangeGradient.colors.last.withOpacity(
+                  0.4,
+                ),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
           ),
-          child: const Center(child: Text("Save", style: TextStyle(color: Colors.white, fontSize: 18, fontFamily: 'Poppins-SemiBold'))),
+          child: const Center(
+            child: Text(
+              "Save",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontFamily: 'Poppins-SemiBold',
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -344,10 +496,33 @@ class _GoalsPageState extends State<GoalsPage> {
   Widget _buildBackgroundOrbs() {
     return Stack(
       children: [
-        Positioned(top: -40, left: -60, child: Container(width: 180, height: 180, decoration: BoxDecoration(shape: BoxShape.circle, gradient: AppColors.primaryOrangeGradient.scale(0.7)))),
-        Positioned(top: 100, right: -80, child: _orb(250, AppColors.primaryBlueGradient)),
-        Positioned(top: 400, left: -100, child: _orb(250, AppColors.primaryBlueGradient)),
-        Positioned(bottom: -100, right: -50, child: _orb(400, AppColors.primaryOrangeGradient)),
+        Positioned(
+          top: -40,
+          left: -60,
+          child: Container(
+            width: 180,
+            height: 180,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: AppColors.primaryOrangeGradient.scale(0.7),
+            ),
+          ),
+        ),
+        Positioned(
+          top: 100,
+          right: -80,
+          child: _orb(250, AppColors.primaryBlueGradient),
+        ),
+        Positioned(
+          top: 400,
+          left: -100,
+          child: _orb(250, AppColors.primaryBlueGradient),
+        ),
+        Positioned(
+          bottom: -100,
+          right: -50,
+          child: _orb(400, AppColors.primaryOrangeGradient),
+        ),
       ],
     );
   }
@@ -356,9 +531,15 @@ class _GoalsPageState extends State<GoalsPage> {
     return Opacity(
       opacity: 0.3,
       child: Container(
-        width: size, height: size,
+        width: size,
+        height: size,
         decoration: BoxDecoration(shape: BoxShape.circle, gradient: gradient),
-        child: ClipOval(child: BackdropFilter(filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60), child: Container(color: Colors.transparent))),
+        child: ClipOval(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+            child: Container(color: Colors.transparent),
+          ),
+        ),
       ),
     );
   }

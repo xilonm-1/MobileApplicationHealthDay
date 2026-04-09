@@ -7,8 +7,7 @@ import '../constants/app_colors.dart';
 import '../screens/main_screen.dart';
 import '../screens/personal_info_screen.dart';
 import '../screens/goal_page.dart';
-import '../screens/login_screen.dart'; 
-import '../widgets/background_wrapper.dart';
+import '../screens/login_screen.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -18,37 +17,31 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingPageState extends State<SettingPage> {
-  // สถานะของ Switch
   bool _waterReminder = true;
   bool _healthAdvice = true;
 
   @override
   void initState() {
     super.initState();
-    _loadSettings(); 
+    _loadSettings();
   }
 
-  // ดึงค่าจาก SharedPreferences
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _waterReminder = prefs.getBool('waterReminder') ?? true;
-      // ✅ ใช้คีย์ 'health_advice_enabled' ให้ตรงกับใน HealthAdviceService
       _healthAdvice = prefs.getBool('health_advice_enabled') ?? true;
     });
   }
 
-  // เซฟค่า Water Reminder
   Future<void> _toggleWaterReminder(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('waterReminder', value);
     setState(() => _waterReminder = value);
   }
 
-  // ✅ เซฟค่า Health Advice
   Future<void> _toggleHealthAdvice(bool value) async {
     final prefs = await SharedPreferences.getInstance();
-    // ✅ อัปเดตคีย์ 'health_advice_enabled' เพื่อให้ระบบ Service รับรู้
     await prefs.setBool('health_advice_enabled', value);
     setState(() => _healthAdvice = value);
   }
@@ -57,113 +50,76 @@ class _SettingPageState extends State<SettingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
-      body: BackgroundWrapper(
-        child: SafeArea(
-          child: Column(
-            children: [
-              const SizedBox(height: 10),
-              _buildHeader(context),
-              const SizedBox(height: 20),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 25),
-                  children: [
-                    // --- Section: Profile ---
-                    _buildSectionTitle("Profile"),
-                    _buildSettingItem(
-                      iconPath: 'assets/icons/profile_icon.png',
-                      title: "Edit Personal Information",
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const PersonalInfoPage(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildSettingItem(
-                      iconPath: 'assets/icons/goal_icon.png',
-                      title: "Goals",
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const GoalsPage(),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 25),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
+            _buildHeader(context),
+            const SizedBox(height: 20),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 25),
+                children: [
+                  _buildSectionTitle("Profile"),
+                  _buildSettingItem(
+                    iconPath: 'assets/icons/profile_icon.png',
+                    title: "Edit Personal Information",
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PersonalInfoPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildSettingItem(
+                    iconPath: 'assets/icons/goal_icon.png',
+                    title: "Goals",
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const GoalsPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 25),
 
-                    // --- Section: Notifications ---
-                    _buildSectionTitle("Notifications"),
-                    _buildSettingItem(
-                      iconPath: 'assets/icons/water_notification_icon.png',
-                      title: "Water Reminder",
-                      isSwitch: true,
-                      switchValue: _waterReminder,
-                      onChanged: (val) => _toggleWaterReminder(val), 
-                    ),
-                    _buildSettingItem(
-                      iconPath: 'assets/icons/health_notification_icon.png',
-                      title: "Health Advice",
-                      isSwitch: true,
-                      switchValue: _healthAdvice,
-                      onChanged: (val) => _toggleHealthAdvice(val), // ✅ เรียกใช้งานฟังก์ชันที่แก้ใหม่
-                    ),
-                    const SizedBox(height: 25),
+                  _buildSectionTitle("Notifications"),
+                  _buildSettingItem(
+                    iconPath: 'assets/icons/water_notification_icon.png',
+                    title: "Water Reminder",
+                    isSwitch: true,
+                    switchValue: _waterReminder,
+                    onChanged: (val) => _toggleWaterReminder(val),
+                  ),
+                  _buildSettingItem(
+                    iconPath: 'assets/icons/health_notification_icon.png',
+                    title: "Health Advice",
+                    isSwitch: true,
+                    switchValue: _healthAdvice,
+                    onChanged: (val) => _toggleHealthAdvice(val),
+                  ),
+                  const SizedBox(height: 25),
 
-                    // --- Section: System ---
-                    _buildSectionTitle("System"),
-                    _buildSettingItem(
-                      iconPath: 'assets/icons/logout_icon.png',
-                      title: "Log Out",
-                      isLogout: true,
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Log Out', style: TextStyle(fontFamily: 'Poppins-Medium', fontWeight: FontWeight.bold)),
-                            content: const Text('Are you sure you want to log out?', style: TextStyle(fontFamily: 'Poppins')),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontFamily: 'Poppins-Medium')),
-                              ),
-                              TextButton(
-                                onPressed: () async {
-                                  await Supabase.instance.client.auth.signOut();
-                                  if (!context.mounted) return;
-                                  
-                                  Navigator.pushAndRemoveUntil(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => const LoginScreen()),
-                                    (route) => false,
-                                  );
-                                },
-                                child: const Text('Log Out', style: TextStyle(color: Colors.red, fontFamily: 'Poppins-Medium', fontWeight: FontWeight.bold)),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 100), 
-                  ],
-                ),
+                  _buildSectionTitle("System"),
+                  _buildSettingItem(
+                    iconPath: 'assets/icons/logout_icon.png',
+                    title: "Log Out",
+                    isLogout: true,
+                    onTap: () => _showLogoutDialog(context),
+                  ),
+                  const SizedBox(height: 100),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
-
-  // ====================================================================
-  // MAIN COMPONENTS
-  // ====================================================================
 
   Widget _buildHeader(BuildContext context) {
     return Padding(
@@ -283,13 +239,64 @@ class _SettingPageState extends State<SettingPage> {
                 ),
               )
             : isLogout
-                ? null
-                : const Icon(
-                    Icons.arrow_forward_ios,
-                    size: 14,
-                    color: Color(0xFF81E5E5),
-                  ),
+            ? null
+            : const Icon(
+                Icons.arrow_forward_ios,
+                size: 14,
+                color: Color(0xFF81E5E5),
+              ),
         onTap: isSwitch ? null : onTap,
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'Log Out',
+          style: TextStyle(
+            fontFamily: 'Poppins-Medium',
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: const Text(
+          'Are you sure you want to log out?',
+          style: TextStyle(fontFamily: 'Poppins'),
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                color: Colors.grey,
+                fontFamily: 'Poppins-Medium',
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              await Supabase.instance.client.auth.signOut();
+              if (!context.mounted) return;
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                (route) => false,
+              );
+            },
+            child: const Text(
+              'Log Out',
+              style: TextStyle(
+                color: Colors.red,
+                fontFamily: 'Poppins-Medium',
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
