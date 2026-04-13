@@ -323,7 +323,7 @@ class _RewardsShopPageState extends State<RewardsShopPage> {
               ],
             ),
           ),
-          Positioned(top: -25, child: _buildAddButton()),
+          Positioned(top: 10, child: _buildAddButton()),
         ],
       ),
     );

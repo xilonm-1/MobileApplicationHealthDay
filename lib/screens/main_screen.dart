@@ -169,7 +169,7 @@ class _MainScreenState extends State<MainScreen> {
           ),
           // ปุ่ม Add ลอยนูนตรงกลาง
           Positioned(
-            top: -25,
+            top: 10,
             child: _buildAddButton(),
           ),
         ],
