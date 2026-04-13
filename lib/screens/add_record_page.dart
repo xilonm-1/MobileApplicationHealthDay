@@ -237,7 +237,7 @@ class _AddRecordPageState extends State<AddRecordPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
-      resizeToAvoidBottomInset: true, // ✅ ป้องกันคีย์บอร์ดทับ UI
+      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
           _buildBackgroundOrbs(),
@@ -247,18 +247,19 @@ class _AddRecordPageState extends State<AddRecordPage> {
                 _buildHeader(context),
                 Expanded(
                   child: SingleChildScrollView(
-                    // ✅ คลุมส่วนที่เหลือให้เลื่อนได้
                     padding: const EdgeInsets.symmetric(horizontal: 25),
                     physics: const BouncingScrollPhysics(),
                     child: Column(
                       children: [
-                        _buildBigHeartIcon(),
+                        _buildBigHealthIcon(),
                         _buildMainRecordCard(),
                         const SizedBox(height: 30),
                         _isLoading
-                            ? const CircularProgressIndicator()
+                            ? const CircularProgressIndicator(
+                                color: Color(0xFF2D7D9A),
+                              )
                             : _buildActionButtons(context),
-                        const SizedBox(height: 30), // ✅ เผื่อช่องว่างด้านล่าง
+                        const SizedBox(height: 30),
                       ],
                     ),
                   ),
@@ -267,6 +268,67 @@ class _AddRecordPageState extends State<AddRecordPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBackgroundOrbs() {
+    return Stack(
+      children: [
+        Positioned(
+          top: -30,
+          left: -20,
+          child: _orb(100, AppColors.primaryOrangeGradient),
+        ),
+        Positioned(
+          top: 80,
+          right: -50,
+          child: _orb(200, AppColors.primaryBlueGradient),
+        ),
+        Positioned(
+          bottom: 150,
+          left: -80,
+          child: _orb(200, AppColors.primaryBlueGradient),
+        ),
+        Positioned(
+          bottom: 0,
+          right: -30,
+          child: _orb(250, AppColors.primaryOrangeGradient),
+        ),
+      ],
+    );
+  }
+
+  Widget _orb(double size, LinearGradient gradient) {
+    return Opacity(
+      opacity: 0.5,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(shape: BoxShape.circle, gradient: gradient),
+        child: ClipOval(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 45, sigmaY: 45),
+            child: Container(color: Colors.transparent),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBigHealthIcon() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Image.asset(
+        'assets/icons/health_icon.png',
+        width: 60, // เล็กลงตามต้องการ
+        height: 60,
+        fit: BoxFit.contain,
+        errorBuilder: (c, e, s) => const Icon(
+          Icons.health_and_safety,
+          size: 50,
+          color: Color(0xFF2D7D9A),
+        ),
       ),
     );
   }
@@ -327,9 +389,37 @@ class _AddRecordPageState extends State<AddRecordPage> {
                   padding: const EdgeInsets.all(18),
                   child: Column(
                     children: [
-                      _buildWaterActivity(),
+                      _buildHybridInputFieldRow(
+                        iconPath: 'assets/icons/water2_icon.png',
+                        title: "Water",
+                        gradient: AppColors.waterGradient,
+                        controller: _waterController,
+                        unit: "glasses",
+                        onDecrease: () => setState(
+                          () => _waterController.text =
+                              "${(_getValue(_waterController) - 1).clamp(0, 12)}",
+                        ),
+                        onIncrease: () => setState(
+                          () => _waterController.text =
+                              "${(_getValue(_waterController) + 1).clamp(0, 12)}",
+                        ),
+                      ),
                       const SizedBox(height: 15),
-                      _buildSleepActivity(),
+                      _buildHybridInputFieldRow(
+                        iconPath: 'assets/icons/sleep2_icon.png',
+                        title: "Sleep",
+                        gradient: AppColors.sleepGradient,
+                        controller: _sleepController,
+                        unit: "hours",
+                        onDecrease: () => setState(
+                          () => _sleepController.text =
+                              "${(_getValue(_sleepController) - 1).clamp(0, 12)}",
+                        ),
+                        onIncrease: () => setState(
+                          () => _sleepController.text =
+                              "${(_getValue(_sleepController) + 1).clamp(0, 12)}",
+                        ),
+                      ),
                       const SizedBox(height: 15),
                       _buildMoodActivity(),
                       const SizedBox(height: 20),
@@ -363,38 +453,94 @@ class _AddRecordPageState extends State<AddRecordPage> {
     );
   }
 
-  Widget _buildWaterActivity() {
-    return _buildHybridInputFieldRow(
-      iconPath: 'assets/icons/water2_icon.png',
-      title: "Water",
-      gradient: AppColors.waterGradient,
-      controller: _waterController,
-      unit: "glasses",
-      onDecrease: () => setState(
-        () => _waterController.text =
-            "${(_getValue(_waterController) - 1).clamp(0, 12)}",
+  Widget _buildHybridInputFieldRow({
+    required String iconPath,
+    required String title,
+    required LinearGradient gradient,
+    required TextEditingController controller,
+    required String unit,
+    required VoidCallback onDecrease,
+    required VoidCallback onIncrease,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
       ),
-      onIncrease: () => setState(
-        () => _waterController.text =
-            "${(_getValue(_waterController) + 1).clamp(0, 12)}",
-      ),
-    );
-  }
-
-  Widget _buildSleepActivity() {
-    return _buildHybridInputFieldRow(
-      iconPath: 'assets/icons/sleep2_icon.png',
-      title: "Sleep",
-      gradient: AppColors.sleepGradient,
-      controller: _sleepController,
-      unit: "hours",
-      onDecrease: () => setState(
-        () => _sleepController.text =
-            "${(_getValue(_sleepController) - 1).clamp(0, 12)}",
-      ),
-      onIncrease: () => setState(
-        () => _sleepController.text =
-            "${(_getValue(_sleepController) + 1).clamp(0, 12)}",
+      child: Row(
+        children: [
+          // วงกลม Gradient พร้อมไอคอนสีขาว
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              gradient: gradient,
+              shape: BoxShape.circle,
+            ),
+            child: Image.asset(
+              iconPath,
+              width: 20,
+              height: 20,
+              color: Colors.white,
+              fit: BoxFit.contain,
+            ),
+          ),
+          const SizedBox(width: 12),
+          _buildGradientText(
+            title,
+            gradient,
+            const TextStyle(fontFamily: 'Poppins-Medium', fontSize: 15),
+          ),
+          const Spacer(),
+          GestureDetector(
+            onTap: onDecrease,
+            child: const Icon(
+              Icons.remove,
+              size: 18,
+              color: AppColors.greyText,
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 45,
+            height: 32,
+            child: TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontFamily: 'Poppins-Medium',
+                fontSize: 14,
+              ),
+              decoration: InputDecoration(
+                contentPadding: EdgeInsets.zero,
+                filled: true,
+                fillColor: const Color(0xFFF7F7F7),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: onIncrease,
+            child: const Icon(Icons.add, size: 18, color: AppColors.greyText),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 50,
+            child: Text(
+              unit,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.greyText,
+                fontFamily: 'Poppins',
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -408,23 +554,24 @@ class _AddRecordPageState extends State<AddRecordPage> {
       ),
       child: Row(
         children: [
+          // วงกลม Gradient พร้อมไอคอนสีขาวสำหรับ Mood
           Container(
-            padding: const EdgeInsets.all(5),
+            padding: const EdgeInsets.all(6),
             decoration: const BoxDecoration(
               gradient: AppColors.moodGradient,
               shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.sentiment_satisfied_alt,
-              color: Colors.white,
               size: 22,
+              color: Colors.white,
             ),
           ),
           const SizedBox(width: 12),
           _buildGradientText(
             "Mood",
             AppColors.moodGradient,
-            const TextStyle(fontFamily: 'Poppins-Medium', fontSize: 16),
+            const TextStyle(fontFamily: 'Poppins-Medium', fontSize: 15),
           ),
           const Spacer(),
           Container(
@@ -443,7 +590,12 @@ class _AddRecordPageState extends State<AddRecordPage> {
                     .map(
                       (m) => DropdownMenuItem(
                         value: m,
-                        child: FittedBox(child: Text(m)),
+                        child: FittedBox(
+                          child: Text(
+                            m,
+                            style: const TextStyle(fontFamily: 'Poppins'),
+                          ),
+                        ),
                       ),
                     )
                     .toList(),
@@ -470,10 +622,7 @@ class _AddRecordPageState extends State<AddRecordPage> {
         ),
         const SizedBox(height: 5),
         Container(
-          constraints: const BoxConstraints(
-            minHeight: 100,
-            maxHeight: 150,
-          ), // ✅ ป้องกันกล่องยืดจนล้น
+          constraints: const BoxConstraints(minHeight: 100, maxHeight: 150),
           padding: const EdgeInsets.symmetric(horizontal: 15),
           decoration: BoxDecoration(
             color: const Color(0xFFF6F6F6),
@@ -489,73 +638,6 @@ class _AddRecordPageState extends State<AddRecordPage> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildHybridInputFieldRow({
-    required String iconPath,
-    required String title,
-    required LinearGradient gradient,
-    required TextEditingController controller,
-    required String unit,
-    required VoidCallback onDecrease,
-    required VoidCallback onIncrease,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              gradient: gradient,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.circle, size: 22, color: Colors.white),
-          ),
-          const SizedBox(width: 8),
-          _buildGradientText(
-            title,
-            gradient,
-            const TextStyle(fontFamily: 'Poppins-Medium', fontSize: 14),
-          ),
-          const Spacer(),
-          GestureDetector(
-            onTap: onDecrease,
-            child: const Icon(Icons.remove, size: 18),
-          ),
-          const SizedBox(width: 5),
-          SizedBox(
-            width: 40,
-            height: 30,
-            child: TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              textAlign: TextAlign.center,
-              decoration: const InputDecoration(
-                contentPadding: EdgeInsets.zero,
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ),
-          const SizedBox(width: 5),
-          GestureDetector(
-            onTap: onIncrease,
-            child: const Icon(Icons.add, size: 18),
-          ),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 45,
-            child: FittedBox(
-              child: Text(unit, style: const TextStyle(fontSize: 12)),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -601,44 +683,10 @@ class _AddRecordPageState extends State<AddRecordPage> {
               color: Colors.white,
               fontSize: 16,
               fontWeight: FontWeight.bold,
+              fontFamily: 'Poppins',
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildBigHeartIcon() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 20),
-      child: Icon(Icons.favorite, size: 60, color: Color(0xFF2D7D9A)),
-    );
-  }
-
-  Widget _buildBackgroundOrbs() {
-    return Stack(
-      children: [
-        Positioned(
-          top: -20,
-          left: -20,
-          child: _orb(130, AppColors.primaryOrangeGradient),
-        ),
-        Positioned(
-          bottom: -20,
-          right: -30,
-          child: _orb(220, AppColors.primaryOrangeGradient),
-        ),
-      ],
-    );
-  }
-
-  Widget _orb(double size, LinearGradient gradient) {
-    return Opacity(
-      opacity: 0.3,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(shape: BoxShape.circle, gradient: gradient),
       ),
     );
   }
