@@ -321,7 +321,7 @@ class _AddRecordPageState extends State<AddRecordPage> {
       padding: const EdgeInsets.symmetric(vertical: 20),
       child: Image.asset(
         'assets/icons/health_icon.png',
-        width: 60, // เล็กลงตามต้องการ
+        width: 60,
         height: 60,
         fit: BoxFit.contain,
         errorBuilder: (c, e, s) => const Icon(
@@ -470,7 +470,6 @@ class _AddRecordPageState extends State<AddRecordPage> {
       ),
       child: Row(
         children: [
-          // วงกลม Gradient พร้อมไอคอนสีขาว
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
@@ -554,17 +553,23 @@ class _AddRecordPageState extends State<AddRecordPage> {
       ),
       child: Row(
         children: [
-          // วงกลม Gradient พร้อมไอคอนสีขาวสำหรับ Mood
           Container(
             padding: const EdgeInsets.all(6),
             decoration: const BoxDecoration(
               gradient: AppColors.moodGradient,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.sentiment_satisfied_alt,
-              size: 22,
+            child: Image.asset(
+              'assets/icons/mood2_icon.png',
+              width: 22,
+              height: 22,
               color: Colors.white,
+              fit: BoxFit.contain,
+              errorBuilder: (c, e, s) => const Icon(
+                Icons.sentiment_satisfied_alt,
+                size: 22,
+                color: Colors.white,
+              ),
             ),
           ),
           const SizedBox(width: 12),
